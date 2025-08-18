@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" >
+  <title>Welcome to TribalConnect</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- FastAPI/Starlette uses request.url_for(...) -->
+  <link rel="icon" href="{{ request.url_for('static', path='images/logo.png') }}">
+  <link rel="stylesheet" href="{{ request.url_for('static', path='css/styles.css') }}">
+
+  {% set banner_url = request.url_for('static', path='images/tribalconnect-banner.png') %}
+  <style>
+    .tribal-bg {
+      background-image: url('{{ banner_url }}');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+    /* Optional: keep your header image nicely contained */
+    .banner-img {
+      width: 100%;
+      max-height: 400px;
+      object-fit: cover;
+      display: block;
+    }
+  </style>
+</head>
+<body class="tribal-bg text-white min-h-screen">
+
+  <!-- <header>
+    <img src="{{ banner_url }}" alt="TribalConnect Banner" class="banner-img">
+  </header> -->
+
+  <!-- Dimmed overlay so text pops over the background -->
+  <div class="bg-black/60 min-h-screen flex flex-col justify-center items-center p-6">
+    <!-- <img src="{{ request.url_for('static', path='images/logo.png') }}" alt="TribalConnect Logo"
+        class="w-24 h-24 mb-6 animate-pulse"> -->
+
+    <h1 class="text-5xl md:text-6xl font-bold text-amber-200 drop-shadow-lg text-center">
+      Welcome to <span class="text-emerald-300">TribalConnect</span> Hub
+    </h1>
+
+    <p class="mt-4 text-lg md:text-xl max-w-2xl text-center text-gray-200">
+      Uniting Native Nations through tradition, technology, and sovereign community-building.
+    </p>
+
+    <div class="mt-8 flex gap-4 flex-wrap justify-center">
+      <a href="/tribes-html"
+        class="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-full shadow-md transition flex items-center gap-2">
+        <span>Explore Tribes</span>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9 5l7 7-7 7" />
+        </svg>
+      </a>
+      <a href="/login"
+        class="px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold rounded-full shadow-md transition">
+        Login
+      </a>
+      <a href="/signup"
+        class="px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white font-semibold rounded-full shadow-md transition">
+        Join Community
+      </a>
+    </div>
+    <div id="upcoming-card" class="mt-10 w-full max-w-2xl bg-white/10 backdrop-blur-sm rounded-2xl p-5 shadow-lg">
+  <div class="flex items-center justify-between">
+    <h2 class="text-xl font-semibold text-white">Upcoming Events</h2>
+    <a href="/tribes-html" class="text-emerald-300 hover:underline text-sm">View all tribes</a>
+  </div>
+  <div id="upcoming-list" class="mt-4 space-y-3 text-gray-100">
+    <div class="text-sm text-gray-300">Loading…</div>
+  </div>
+</div>
+  <!-- Logo moved here -->
+<!-- <div class="mt-12 flex justify-center">
+  <img src="{{ request.url_for('static', path='images/logo.png') }}"
+      alt="Logo"
+      class="h-32 animate-pulse">
+</div> -->
+<!-- footer -->
+    <footer class="mt-12 text-sm text-gray-300">
+      &copy; 2025 TribalConnect. All rights reserved. | <a href="/contact" class="underline hover:text-white">Contact Us</a>
+    </footer>
+  </div>
+  <script>
+  (async () => {
+    const listEl = document.getElementById('upcoming-list');
+    if (!listEl) return;
+
+    // today as YYYY-MM-DD
+    const today = new Date();
+    const ymd = today.toISOString().slice(0, 10);
+
+    try {
+      // get upcoming events + tribe names for labels
+      const [eventsRes, tribesRes] = await Promise.all([
+        fetch(`/api/core/events?start=${ymd}&limit=8`),
+        fetch(`/api/core/tribes`)
+      ]);
+
+      const events = eventsRes.ok ? await eventsRes.json() : [];
+      const tribes = tribesRes.ok ? await tribesRes.json() : [];
+      const nameById = new Map(tribes.map(t => [t.id, t.name]));
+
+      if (!events.length) {
+        listEl.innerHTML = '<div class="text-sm text-gray-300">No upcoming events yet.</div>';
+        return;
+      }
+
+      listEl.innerHTML = events.map(e => {
+        const d = new Date(e.start_date);
+        const dateStr = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        const tribe = nameById.get(e.tribe_id) || `Tribe #${e.tribe_id}`;
+        return `
+          <a class="block rounded-xl p-3 hover:bg-white/10 transition" href="/tribes-html/${e.tribe_id}">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-medium">${e.title}</div>
+                <div class="text-sm text-gray-300">${dateStr}${e.end_date ? '–' + new Date(e.end_date).toLocaleDateString() : ''}${e.location ? ' • ' + e.location : ''} • ${tribe}</div>
+              </div>
+              <svg class="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </div>
+          </a>`;
+      }).join('');
+    } catch (err) {
+      console.error(err);
+      listEl.innerHTML = '<div class="text-sm text-red-200">Could not load events.</div>';
+    }
+  })();
+</script>
+</body>
+</html>

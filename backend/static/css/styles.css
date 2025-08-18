@@ -1,0 +1,177 @@
+/* ===== Base resets ===== */
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #0b1b24;   /* fallback behind hero */
+  color: #fff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+/* ===== Typographic helpers (from your original) ===== */
+h1 { color: #002b45; }
+
+ul {
+  list-style: none;
+  padding: 0;
+  }
+
+li {
+  background: #fff; color: #333;
+  padding: 1rem; margin: 0.5rem 0; border-radius: 10px;
+  box-shadow: 0 2px 4px color-mix(in srgb, black 10%, transparent);
+}
+
+a {
+  text-decoration: none;
+  color: #007bff;
+  }
+
+a:hover {
+  text-decoration: underline;
+}
+
+p {
+  line-height: 1.6;
+}
+
+button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px; cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* ===== Hero background & layout ===== */
+.hero {
+  background-image: url("/static/images/tribalconnect-banner.png");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center -80px;  /* Desktop default: nudge image up */
+  min-height: 100vh;
+}
+
+.hero-overlay {
+  min-height: 100vh;
+  background: rgb(0 0 0 / 60%);       /* same as bg-black/60 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;       /* we’ll control vertical offset with padding */
+  padding: 0 1.5rem;
+}
+
+.hero-content {
+  width: 100%;
+  max-width: 1100px;
+  text-align: center;
+  padding-top: clamp(120px, 18vh, 240px);  /* vertical placement under the bird’s feet */
+  padding-bottom: 2rem;
+}
+
+/* Logo under buttons */
+.logo-wrap {
+  margin-top: 3rem;
+}
+
+.logo-img {
+  height: 8rem;
+} /* ~128px; Tailwind h-32 equivalent */
+
+/* ===== Breakpoints ===== */
+
+/* Large desktops */
+@media (width <= 1280px) {
+  .hero { background-position: center -70px; }
+  .hero-content { padding-top: clamp(110px, 17vh, 220px); }
+}
+
+/* Tablets / small laptops */
+@media (width <= 1024px) {
+  .hero { background-position: center -50px; }
+  .hero-content { padding-top: 260px; }
+  .logo-img { height: 7rem; }
+}
+
+/* Landscape tablets / large phones */
+@media (width <= 768px) {
+  .hero { background-position: center -20px; }
+  .hero-content { padding-top: clamp(70px, 14vh, 160px); }
+  .logo-wrap { margin-top: 2.5rem; }
+  .logo-img { height: 6.5rem; }
+}
+
+/* Phones */
+@media (width <= 640px) {
+  .hero { background-position: center top; }
+  .hero-content { padding-top: clamp(50px, 12vh, 130px); }
+  .logo-wrap { margin-top: 2rem; }
+  .logo-img { height: 6rem; }
+}
+
+/* Small-phone text scaling (optional, keeps headings readable) */
+@media (width <= 420px) {
+  .hero-content h1 { font-size: 2rem; }
+  .hero-content p { font-size: 1rem; }
+}
+
+/* ===== Tribe detail & events ===== */
+.container {
+  margin: 2rem auto;
+  max-width: 900px;
+  background: #fff;      /* light panel so text is readable */
+  color: #111;
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 12%);
+}
+
+.meta {
+  color:#444;
+  margin:.15rem 0;
+}
+
+.back {
+  margin-bottom: 1rem;
+  display:inline-block;
+}
+
+.divider {
+  margin:1.5rem 0;
+  border:0;
+  border-top:1px solid #eee;
+}
+
+.event-item {
+  margin:.5rem 0;
+  padding-bottom:.5rem;
+  border-bottom:1px solid #eee;
+}
+
+.controls {
+  margin-top:.25rem;
+}
+
+.edit-container {
+  display:none;
+  margin-top:.5rem;
+}
+
+.edit-container.is-open {
+  display:block;
+}
+
+/* tiny utility */
+.mt-1 { margin-top: 1rem; }

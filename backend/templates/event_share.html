@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Share Photos</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 2rem; max-width: 800px; }
+    .muted { color:#666 }
+    .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap:12px; }
+    .card { background:#fafafa; padding:8px; border:1px solid #eee; border-radius:8px; }
+  </style>
+</head>
+<body>
+  <a href="/tribes-html" class="muted">← Back</a>
+  <h1>Share Photos</h1>
+  <p class="muted">Upload event photos. Choose visibility: <b>Public</b> or <b>Tribal-only</b>.</p>
+
+  <form id="up" enctype="multipart/form-data">
+    <label for="fileInput">Photo file:</label>
+    <input type="file" id="fileInput" name="file" required title="Choose a photo to upload">
+    <input type="text" name="caption" placeholder="Caption (optional)">
+    <input type="text" name="uploader_name" placeholder="Your name (optional)">
+    <label for="visibilitySelect">Visibility:</label>
+    <select name="visibility" id="visibilitySelect" title="Choose photo visibility">
+      <option value="public">Public</option>
+      <option value="tribal_only">Tribal-only</option>
+    </select>
+    <button type="submit">Upload</button>
+    <span id="msg" class="muted"></span>
+  </form>
+
+  <h3>Gallery</h3>
+  <div id="gallery" class="grid"></div>
+
+<script>
+  const eventId = window.location.pathname.split('/').slice(-2,-1)[0];
+
+  async function loadGallery(){
+    const r = await fetch(`/api/core/events/${eventId}/media`);
+    const list = r.ok ? await r.json() : [];
+    document.getElementById('gallery').innerHTML = list.map(m => `
+      <div class="card">
+        <img src="${m.file_path}" alt="" style="width:100%; aspect-ratio: 4/3; object-fit:cover; border-radius:6px">
+        ${m.caption ? `<div>${m.caption}</div>`:''}
+        <div class="muted" style="font-size:.9rem">${m.visibility}${m.uploader_name ? ` • ${m.uploader_name}`:''}</div>
+      </div>
+    `).join('') || '<em class="muted">No photos yet</em>';
+  }
+
+  document.getElementById('up').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const msg = document.getElementById('msg');
+    msg.textContent='Uploading…';
+    const form = new FormData(e.currentTarget);
+    const r = await fetch(`/api/core/events/${eventId}/media`, { method:'POST', body: form });
+    if (!r.ok){ msg.textContent = 'Upload failed'; return; }
+    msg.textContent='Uploaded ✔'; e.currentTarget.reset(); loadGallery();
+  });
+
+  loadGallery();
+</script>
+</body>
+</html>

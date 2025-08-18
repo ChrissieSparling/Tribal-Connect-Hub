@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="{{ request.url_for('static', path='css/styles.css') }}">
+	<title>Tribe List</title>
+<style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 2rem; max-width: 900px; }
+    .meta { color:#444; margin:.15rem 0; }
+    .back { margin-bottom: 1rem; display:inline-block; }
+    .spaced-hr { margin: 1.5rem 0; }
+	.controls { display:flex; gap:.5rem; margin-top:.35rem; flex-wrap:wrap; }
+	.qr { width:64px; height:64px; border-radius:8px; margin-top:.25rem; }
+  </style>
+</head>
+<body class="container">
+  <a class="back" href="/tribes-html">← Back to Tribes</a>
+  <h1 id="name">Loading…</h1>
+  <div id="meta"></div>
+  <p id="desc"></p>
+  <hr class="spaced-hr">
+  **<hr class="divider">**
+
+<h2>Events</h2>
+<div id="events-list"><em>Loading…</em></div>
+
+<h3 class="mt-1">Add Event</h3>
+<form id="add-event">
+  <label>Title</label>
+  <input name="title" type="text" required title="Event Title" >
+
+  <label>Start Date</label>
+  <input name="start_date" type="date" required title="Start Date" >
+
+  <label>End Date (optional)</label>
+  <input name="end_date" type="date" title="End Date" >
+
+  <label>Location (optional)</label>
+  <input name="location" type="text" placeholder="Enter location" title="Location" >
+
+  <label>Description (optional)</label>
+  <textarea name="description" rows="2" title="Description" placeholder="Enter event description"></textarea>
+
+  <div class="controls">
+    <button type="submit">Add</button>
+    <span id="ev-msg" class="meta"></span>
+  </div>
+</form>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const fmt = (s) => s ? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '';
+    const tribeId = window.location.pathname.split('/').pop();
+
+    // ----- Tribe header -----
+    async function loadTribe() {
+      const r = await fetch(`/api/core/tribes/${tribeId}`);
+      if (!r.ok) { document.getElementById('name').textContent = 'Tribe not found'; return; }
+      const t = await r.json();
+      document.getElementById('name').textContent = t.name;
+      document.getElementById('desc').textContent = t.description || '';
+      const m = [];
+      if (t.established_year) m.push(`<div class="meta"><strong>Established:</strong> ${t.established_year}</div>`);
+      if (t.recognition_type) m.push(`<div class="meta"><strong>Recognition:</strong> ${fmt(t.recognition_type)}</div>`);
+      if (t.original_territory_note) m.push(`<div class="meta"><strong>Territory:</strong> ${t.original_territory_note}</div>`);
+      if (t.website_url) m.push(`<div class="meta"><strong>Website:</strong> <a href="${t.website_url}" target="_blank" rel="noopener">${t.website_url}</a></div>`);
+      document.getElementById('meta').innerHTML = m.join('');
+    }
+
+    // ----- Events -----
+  async function loadEvents() {
+  const r = await fetch(`/api/core/tribes/${tribeId}/events`);
+  const list = await r.json();
+  const box = document.getElementById('events-list');
+
+  if (!Array.isArray(list) || list.length === 0) {
+    box.innerHTML = '<em>No events yet.</em>';
+    return;
+  }
+
+  // fetch per-event details in parallel (ignore 404s)
+  const details = await Promise.all(list.map(async (e) => {
+    const d = await fetch(`/api/core/events/${e.id}/details`);
+    return d.ok ? await d.json() : null;
+  }));
+
+  box.innerHTML = list.map((e, i) => renderEvent(e, details[i])).join('');
+}
+// 2) Add this helper *right below* loadEvents()
+function renderEvent(e, d) {
+  const start = new Date(e.start_date);
+  const end   = e.end_date ? new Date(e.end_date) : null;
+  const when  = end
+    ? `${start.toLocaleDateString()} – ${end.toLocaleDateString()}`
+    : start.toLocaleDateString();
+
+  const externalLink = d?.external_url
+    ? `<a href="${d.external_url}" target="_blank" rel="noopener">Event website</a>`
+    : '';
+
+  const weatherLink = (d?.lat && d?.lon)
+    ? `<a href="https://forecast.weather.gov/MapClick.php?lat=${d.lat}&lon=${d.lon}" target="_blank" rel="noopener">Weather</a>`
+    : '';
+
+  const carpoolLink = d?.carpool_url
+    ? `<a href="${d.carpool_url}" target="_blank" rel="noopener">Carpool</a>`
+    : '';
+
+  const parking = d?.parking_info ? `<div class="meta"><strong>Parking:</strong> ${d.parking_info}</div>` : '';
+  const shuttle = d?.shuttle_info ? `<div class="meta"><strong>Shuttle:</strong> ${d.shuttle_info}</div>` : '';
+
+  return `
+    <div class="meta event-item">
+      <strong>${e.title}</strong>
+      — ${when}${e.location ? ` • ${e.location}` : ''}
+      ${e.description ? `<div>${e.description}</div>` : ''}
+
+      ${parking}${shuttle}
+
+      <div class="controls">
+        <a href="/events-html/${e.id}/share">Share photos</a>
+        ${externalLink ? `<span>• ${externalLink}</span>` : ''}
+        ${weatherLink ? `<span>• ${weatherLink}</span>` : ''}
+        ${carpoolLink ? `<span>• ${carpoolLink}</span>` : ''}
+      </div>
+
+      <div class="meta"><img class="qr" src="/api/core/events/${e.id}/share_qr.png" alt="Share QR"></div>
+
+      <div class="controls">
+        <button onclick="startEditEvent(${e.id})" type="button">Edit</button>
+        <button onclick="deleteEvent(${e.id})" type="button">Delete</button>
+      </div>
+
+      <div id="edit-${e.id}" class="edit-container"></div>
+    </div>
+  `;
+}
+
+    // expose handlers to inline onclicks
+    window.deleteEvent = async (id) => {
+      if (!confirm('Delete this event?')) return;
+      const r = await fetch(`/api/core/events/${id}`, { method: 'DELETE' });
+      if (!r.ok && r.status !== 204) { alert('Failed to delete'); return; }
+      loadEvents();
+    };
+
+    window.startEditEvent = async (id) => {
+      const r = await fetch(`/api/core/events/${id}`);
+      if (!r.ok) { alert('Cannot load event'); return; }
+      const e = await r.json();
+      const div = document.getElementById(`edit-${id}`);
+      div.classList.add('is-open');
+      div.innerHTML = `
+        <form onsubmit="return saveEvent(${id}, this)">
+          <label>Title</label>
+          <input name="title" type="text" value="${e.title||''}">
+          <label>Start Date</label>
+          <input name="start_date" type="date" value="${e.start_date}">
+          <label>End Date</label>
+          <input name="end_date" type="date" value="${e.end_date||''}">
+          <label>Location</label>
+          <input name="location" type="text" value="${e.location||''}">
+          <label>Description</label>
+          <textarea name="description" rows="2">${e.description||''}</textarea>
+          <div class="controls">
+            <button type="submit">Save</button>
+            <button type="button" onclick="cancelEditEvent(${id})">Cancel</button>
+          </div>
+        </form>
+      `;
+    };
+
+    window.cancelEditEvent = (id) => {
+      const div = document.getElementById(`edit-${id}`);
+      div.classList.remove('is-open');
+      div.innerHTML = '';
+    };
+
+    window.saveEvent = async (id, form) => {
+      const data = Object.fromEntries(new FormData(form).entries());
+      if (!data.title) delete data.title;
+      if (!data.start_date) delete data.start_date;
+      if (data.end_date === '') delete data.end_date;
+      if (data.location === '') delete data.location;
+      if (data.description === '') delete data.description;
+
+      try {
+        const r = await fetch(`/api/core/events/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (!r.ok) {
+          const err = await r.json().catch(()=>({detail:r.statusText}));
+          throw new Error(err.detail || 'Failed to update');
+        }
+        cancelEditEvent(id);
+        loadEvents();
+      } catch (e) {
+        alert(e.message);
+      }
+      return false;
+    };
+
+    // ----- Add new event (robust) -----
+    const addForm = document.getElementById('add-event');
+    const msgEl = document.getElementById('ev-msg');
+
+    if (addForm) {
+      addForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (msgEl) msgEl.textContent = 'Saving…';
+
+        const data = Object.fromEntries(new FormData(addForm).entries());
+        if (data.end_date === '') delete data.end_date;
+        if (data.location === '') delete data.location;
+        if (data.description === '') delete data.description;
+
+        try {
+          const r = await fetch(`/api/core/tribes/${tribeId}/events`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          if (!r.ok) {
+            const err = await r.json().catch(()=>({detail:r.statusText}));
+            throw new Error(err.detail || 'Failed to create event');
+          }
+          if (typeof addForm.reset === 'function') addForm.reset();   // <-- safe reset
+          if (msgEl) msgEl.textContent = 'Added ✔';
+          loadEvents();
+        } catch (err) {
+          if (msgEl) msgEl.textContent = err.message;
+          console.error(err);
+        }
+      });
+    } else {
+      console.error('Add Event form (#add-event) not found in the DOM.');
+    }
+
+    // initial loads
+    loadTribe();
+    loadEvents();
+  });
+</script>
+</body>
+</html>

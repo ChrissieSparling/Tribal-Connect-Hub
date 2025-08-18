@@ -137,23 +137,4 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
-# === PYTHON ===
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-*.pyc
-*.pdb
-.Python
-env/
-venv/
-ENV/
-ENV.bak/
-venv.bak/
-*.egg-info/
-dist/
-build/
-.eggs/
-*.egg
-*.manifest
-*.spec
+
