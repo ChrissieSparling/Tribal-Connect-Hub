@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Sign Up — TribalConnect{% endblock %}
+{% block content %}
+<div class="auth-card">
+  <h1>Create account</h1>
+  <form onsubmit="return false;">
+    <label>Name</label><input type="text" required title="Enter your name" placeholder="Name">
+    <label>Email</label><input type="email" required title="Enter your email address" placeholder="Email">
+    <label>Password</label><input type="password" required title="Enter your password" placeholder="Password">
+    <button type="submit">Create account</button>
+  </form>
+  <p class="muted" style="margin-top:.75rem;">Already have an account? <a href="/login">Login</a></p>
+</div>
+{% endblock %}

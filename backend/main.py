@@ -130,7 +130,7 @@ members: List[Member] = [
         id=3,
         first_name="Chrissie",
         last_name="Sparling",
-        role="TribalCouncil",
+        role="Tribal Council",
         tribe_id=875,
         profile_picture_url="https://example.com/images/chrissie.jpg",
         website_url="https://chrissiesparling.com",
@@ -149,7 +149,7 @@ members: List[Member] = [
         id=5,
         first_name="Joseph",
         last_name="Willoughby",
-        role="Tribal Member",
+        role="Tribal Member Employee",
         tribe_id=1203,
         profile_picture_url="https://example.com/images/Joseph.jpg",
         website_url="https://joesvision.com",
@@ -164,14 +164,10 @@ def check_permission(tribe_id: int, section: str):
     if not tribe.public_sharing.get(section, False):
         raise HTTPException(status_code=403, detail=f"This tribe has chosen not to publicly share their {section}.")
 
-# ---------- Routes ----------
+# ---------- Routes (API / JSON) ----------
 @app.get("/health")
 def health():
     return {"ok": True}
-
-@app.get("/", response_class=HTMLResponse)
-def homepage(request: Request):
-    return templates.TemplateResponse("home.html", {"request": request})
 
 @app.get("/tribes", response_model=List[Tribe])
 def get_all_tribes():
@@ -199,16 +195,46 @@ def get_tribe_members(tribe_id: int):
     check_permission(tribe_id, "members")
     return [m for m in members if m.tribe_id == tribe_id]
 
-@app.get("/tribes-html", response_class=HTMLResponse)
-def tribe_list_view(request: Request):
-    return templates.TemplateResponse("tribe_list.html", {"request": request, "tribes": tribes.values()})
+# ---------- Routes (HTML / Templates) ----------
+@app.get("/", response_class=HTMLResponse)
+async def home_page(request: Request):
+    return templates.TemplateResponse("home.html", {"request": request})
 
+# LIST PAGE (needed for "Explore Tribes")
+@app.get("/tribes-html", response_class=HTMLResponse)
+async def tribe_list_page(request: Request):
+    return templates.TemplateResponse("tribe_list.html", {"request": request})
+
+# DETAIL PAGE (NO in-memory validation — works for both in-memory and core IDs)
 @app.get("/tribes-html/{tribe_id}", response_class=HTMLResponse)
-def tribe_detail_page(request: Request, tribe_id: int):
+async def tribe_detail_page(request: Request, tribe_id: int):
     return templates.TemplateResponse("tribe_detail.html", {"request": request, "tribe_id": tribe_id})
 
 @app.get("/events-html/{event_id}/share", response_class=HTMLResponse)
-def event_share_page(request: Request, event_id: int):
+async def event_share_page(request: Request, event_id: int):
     return templates.TemplateResponse("event_share.html", {"request": request, "event_id": event_id})
 
 
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+@app.get("/members", response_class=HTMLResponse)
+async def members_page(request: Request):
+    return templates.TemplateResponse("members.html", {"request": request})
+
+@app.get("/departments", response_class=HTMLResponse)
+async def departments_page(request: Request):
+    return templates.TemplateResponse("departments.html", {"request": request})
+
+@app.get("/businesses", response_class=HTMLResponse)
+async def businesses_page(request: Request):
+    return templates.TemplateResponse("businesses.html", {"request": request})
+
+@app.get("/tribes-admin", response_class=HTMLResponse)
+async def tribes_admin_page(request: Request):
+    return templates.TemplateResponse("tribes_admin.html", {"request": request})
+
+@app.get("/signup", response_class=HTMLResponse)
+async def signup_page(request: Request):
+    return templates.TemplateResponse("signup.html", {"request": request})

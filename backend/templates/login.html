@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Login — TribalConnect{% endblock %}
+
+{% block head_extra %}
+<style>
+  .auth-card { max-width: 480px; margin: 2rem auto; padding: 1.25rem; border: 1px solid #eee; border-radius: 12px; background: #fff; }
+  .auth-card h1 { margin: 0 0 .75rem; }
+  .auth-card label { display:block; margin-top:.5rem; font-weight:600; }
+  .auth-card input { width:100%; padding:.5rem; border:1px solid #ccc; border-radius:.4rem; }
+  .auth-card button { margin-top: .9rem; padding:.6rem 1rem; border:0; border-radius:.5rem; background:#111; color:#fff; cursor:pointer; }
+  .muted { color:#666; font-size:.9rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+  <h1>Login</h1>
+  <p class="muted">Welcome back. Enter your email to continue.</p>
+
+  <!-- This is just UI for now; wire to real auth later -->
+  <form onsubmit="return false;">
+    <label for="email">Email</label>
+    <input id="email" type="email" placeholder="you@example.org" required>
+
+    <label for="password">Password</label>
+    <input id="password" type="password" placeholder="••••••••" required>
+
+    <button type="submit">Sign in</button>
+  </form>
+
+  <p class="muted" style="margin-top:.75rem;">
+    Don’t have an account? <a href="/signup">Create one</a>
+  </p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// TODO: Hook this up to real auth API when ready
+document.querySelector('form')?.addEventListener('submit', (e) => {
+  e.preventDefault();
+  alert('Auth not wired yet — UI renders fine 👍');
+});
+</script>
+{% endblock %}
