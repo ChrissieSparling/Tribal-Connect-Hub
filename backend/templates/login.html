@@ -17,29 +17,24 @@
   <h1>Login</h1>
   <p class="muted">Welcome back. Enter your email to continue.</p>
 
-  <!-- This is just UI for now; wire to real auth later -->
-  <form onsubmit="return false;">
+  {% if error %}
+    <p class="muted" style="color:#b00020; margin-top:.75rem;">{{ error }}</p>
+  {% endif %}
+
+  <form action="/login" method="post" novalidate>
     <label for="email">Email</label>
-    <input id="email" type="email" placeholder="you@example.org" required>
+    <input id="email" name="email" type="email" placeholder="you@example.org" required autocomplete="email">
 
     <label for="password">Password</label>
-    <input id="password" type="password" placeholder="••••••••" required>
+    <input id="password" name="password" type="password" placeholder="••••••••" required autocomplete="current-password">
 
     <button type="submit">Sign in</button>
   </form>
 
   <p class="muted" style="margin-top:.75rem;">
-    Don’t have an account? <a href="/signup">Create one</a>
+    Don’t have an account?
+    <a href="{{ request.url_for('signup_form') }}">Create one</a>
   </p>
 </div>
 {% endblock %}
 
-{% block scripts %}
-<script>
-// TODO: Hook this up to real auth API when ready
-document.querySelector('form')?.addEventListener('submit', (e) => {
-  e.preventDefault();
-  alert('Auth not wired yet — UI renders fine 👍');
-});
-</script>
-{% endblock %}
