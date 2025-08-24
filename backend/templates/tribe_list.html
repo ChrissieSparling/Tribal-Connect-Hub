@@ -1,368 +1,98 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tribe List</title>
-    <style>
-        body {
-            font-family: system-ui, Arial, sans-serif;
-            margin: 2rem;
-            max-width: 900px;
-        }
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: .75rem;
-        }
-        .row {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .tribe {
-            padding: .75rem 0;
-            border-bottom: 1px solid #eee;
-        }
-        .name {
-                font-size: 1.25rem;
-                font-weight: 800;
-                margin: 0;
-        }
-        .meta {
-                color: #444;
-                font-size: .95rem;
-                margin: .15rem 0;
-        }
-        .desc {
-            margin-top: .35rem;
-        }
-        .muted {
-            color: #666;
-            font-size: .9rem;
-        }
-        form {
-            margin: 1.25rem 0;
-            padding: 1rem;
-            border: 1px solid #eee;
-            border-radius: .5rem;
-        }
-        label {
-            display:block;
-            margin-top: .5rem;
-            font-weight: 600;
-        }
-        input[type="text"], input[type="number"], select, textarea {
-            width: 100%;
-            padding: .5rem;
-            border: 1px solid #ccc;
-            border-radius: .4rem;
-        }
-        button {
-            padding: .5rem .9rem;
-            border: 0;
-            border-radius: .5rem;
-            cursor: pointer;
-        }
-        .primary {
-            background: #111;
-            color: #fff;
-        }
-        .ghost {
-            background: #f5f5f5;
-        }
-        .danger {
-            background: #b00020;
-            color: #fff; }
-        .toolbar {
-            display:flex;
-            gap:.5rem;
-            align-items:center;
-        }
-        .error {
-            color: #b00020;
-            margin-top: .5rem;
-        }
-        .success {
-            color: #0b7d2b;
-            margin-top: .5rem;
-        }
-        .actions {
-            display:flex;
-            gap:.5rem;
-            margin-top:.35rem;
-        }
-        .margin-top-075 {
-            margin-top: .75rem;
-        }
-    .visually-hidden {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
+{% extends "base.html" %}
+
+{% block head_extra %}
+<style>
+  .item-list { list-style:none; padding:0; margin: 1rem 0; }
+  .item { padding: .75rem 0; border-bottom: 1px solid #eee; }
+  .item-link { text-decoration:none; color:inherit; }
+  .item-desc { color:#444; margin:.25rem 0; }
+  .badges { display:flex; gap:.35rem; flex-wrap:wrap; margin-top:.25rem; }
+  .badge { background:#f3f4f6; color:#111; border-radius: 999px; padding:.15rem .5rem; font-size:.8rem; }
+  .toolbar { display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; }
+  .muted { color:#666; font-size:.9rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Tribes</h1>
+<p class="muted">Browse participating tribes and view public info.</p>
+
+<div class="toolbar">
+  <input id="q" type="text" placeholder="Search by name…" >
+  <select id="sort">
+    <option value="name_asc">Sort: Name (A→Z)</option>
+    <option value="name_desc">Sort: Name (Z→A)</option>
+    <option value="established_desc">Sort: Established (newest)</option>
+    <option value="established_asc">Sort: Established (oldest)</option>
+  </select>
+  <button id="clear" type="button">Clear</button>
+  <span id="status" class="muted"></span>
+</div>
+
+<ul id="list" class="item-list"><li class="muted">Loading…</li></ul>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const fmt = (s) => s ? s.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase()) : '';
+  let TRIBES = [];
+
+  async function load() {
+    const list = document.getElementById('list');
+    const status = document.getElementById('status');
+    list.innerHTML = '<li class="muted">Loading…</li>';
+    status.textContent = '';
+
+    try {
+      // Pull from Core DB (this has your 30 seeded tribes)
+      const q = document.getElementById('q').value.trim();
+      const sort = document.getElementById('sort').value;
+
+      const params = new URLSearchParams();
+      if (q) params.set('q', q);
+      params.set('sort', sort);
+      params.set('limit', 500);
+
+      const r = await fetch(`/api/core/tribes?${params.toString()}`);
+      if (!r.ok) throw new Error('Failed to load tribes');
+      TRIBES = await r.json();
+
+      render();
+    } catch (e) {
+      list.innerHTML = `<li class="muted" style="color:#b00020">Error: ${e.message}</li>`;
     }
-    </style>
-    </head>
-    <body>
-    <!-- Toolbar: search & sort -->
-    <div class="row">
-    <input id="q" type="text" placeholder="Search by name…">
-    <label for="sort" class="visually-hidden">Sort tribes</label>
-    <select id="sort">
-        <option value="name_asc">Sort: Name (A→Z)</option>
-        <option value="name_desc">Sort: Name (Z→A)</option>
-        <option value="established_desc">Sort: Established (newest)</option>
-        <option value="established_asc">Sort: Established (oldest)</option>
-    </select>
-    <button class="ghost" id="clear" type="button">Clear</button>
-    <span id="status" class="muted"></span>
-  </div>
-
-  <!-- Add Tribe -->
-  <form id="add-form">
-    <h3>Add Tribe</h3>
-    <div class="muted">Only <strong>name</strong> is required. Other fields are optional.</div>
-
-    <label>Name *</label>
-    <input name="name" type="text" required placeholder="Enter tribe name" title="Tribe Name">
-
-    <label>Description</label>
-    <textarea name="description" rows="2" title="Description" placeholder="Enter tribe description"></textarea>
-
-    <label>Established Year</label>
-    <input name="established_year" type="number" min="1" max="9999" placeholder="Enter established year" title="Established Year">
-
-    <label>Recognition Type</label>
-    <select name="recognition_type" title="Recognition Type">
-      <option value="">(none)</option>
-      <option value="treaty">Treaty</option>
-      <option value="ira">IRA</option>
-      <option value="state_recognized">State Recognized</option>
-      <option value="non_recognized">Non-Recognized</option>
-      <option value="restored">Restored</option>
-    </select>
-
-    <label>Website URL</label>
-    <input name="website_url" type="text" placeholder="https://example.org" >
-
-    <div class="row margin-top-075">
-    <button class="primary" type="submit">Add Tribe</button>
-    <div id="msg" class="muted"></div>
-    </div>
-  </form>
-
-  <!-- List -->
-  <div id="tribes"><em>Loading…</em></div>
-
-    <script>
-        let EVENT_COUNTS = {};
-        const fmt = (s) => s ? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '';
-        let TRIBES = [];
-        let editingId = null;
-
-        function byId(id) { return TRIBES.find(t => t.id === id); }
-
-async function load() {
-  const container = document.getElementById('tribes');
-  container.innerHTML = '<em>Loading…</em>';
-
-  try {
-    const q = document.getElementById('q').value.trim();
-    const sort = document.getElementById('sort').value;
-
-    const params = new URLSearchParams();
-    if (q) params.set('q', q);
-    params.set('sort', sort);
-    params.set('limit', 200);
-
-    const [tribesRes, countsRes] = await Promise.all([
-      fetch(`/api/core/tribes?${params.toString()}`),
-      fetch('/api/core/tribes/event_counts?upcoming_only=true')
-    ]);
-
-    if (!tribesRes.ok) throw new Error('Failed to load tribes');
-    TRIBES = await tribesRes.json();
-    EVENT_COUNTS = countsRes.ok ? await countsRes.json() : {};
-
-    render();
-  } catch (err) {
-    console.error(err);
-    container.innerHTML = `<div class="error">Failed to load tribes: ${err.message}</div>`;
   }
-}
 
-function render() {
-  const container = document.getElementById('tribes');
-  const list = TRIBES;
-  container.innerHTML = list.length
-    ? list.map(t => (editingId === t.id ? editFormHTML(t) : viewRowHTML(t))).join('')
-    : '<em>No tribes yet.</em>';
-}
+  function render() {
+    const list = document.getElementById('list');
+    if (!Array.isArray(TRIBES) || TRIBES.length === 0) {
+      list.innerHTML = '<li class="muted">No tribes found.</li>';
+      return;
+    }
 
-   function viewRowHTML(t) {
-  const cnt = EVENT_COUNTS[t.id] || 0;
-  return `
-    <div class="tribe" data-id="${t.id}">
-      <p class="name">
-        <a href="/tribes-html/${t.id}" style="text-decoration:none; color:inherit">${t.name}</a>
-      </p>
-      ${cnt ? `<div class="meta">${cnt} upcoming event${cnt === 1 ? '' : 's'}</div>` : ``}
-      ${t.established_year ? `<div class="meta">Established: ${t.established_year}</div>` : ``}
-      ${t.recognition_type ? `<div class="meta">Recognition: ${fmt(t.recognition_type)}</div>` : ``}
-      ${t.website_url ? `<div class="meta">Website: <a href="${t.website_url}" target="_blank" rel="noopener">${t.website_url}</a></div>` : ``}
-      ${t.original_territory_note ? `<div class="meta">Territory: ${t.original_territory_note}</div>` : ``}
-      ${t.description ? `<div class="desc">${t.description}</div>` : ``}
-      <div class="actions">
-        <button class="ghost" onclick="startEdit(${t.id})">Edit</button>
-        <button class="danger" onclick="deleteTribe(${t.id})">Delete</button>
-      </div>
-    </div>
-  `;
-}
-
-    function editFormHTML(t) {
-      const options = (val) => `
-        <option value="" ${!val ? 'selected' : ''}>(none)</option>
-        <option value="treaty" ${val==='treaty'?'selected':''}>Treaty</option>
-        <option value="ira" ${val==='ira'?'selected':''}>IRA</option>
-        <option value="state_recognized" ${val==='state_recognized'?'selected':''}>State Recognized</option>
-        <option value="non_recognized" ${val==='non_recognized'?'selected':''}>Non-Recognized</option>
-        <option value="restored" ${val==='restored'?'selected':''}>Restored</option>
-      `;
-      return `
-        <div class="tribe" data-id="${t.id}">
-          <div class="name">Edit: ${t.name}</div>
-          <div class="row" style="gap:1rem; align-items:flex-start; flex-direction:column;">
-            <label>Name</label>
-            <input id="e_name_${t.id}" type="text" value="${t.name||''}"/>
-
-            <label>Description</label>
-            <textarea id="e_desc_${t.id}" rows="2">${t.description||''}</textarea>
-
-            <label>Established Year</label>
-            <input id="e_year_${t.id}" type="number" min="1" max="9999" value="${t.established_year||''}"/>
-
-            <label>Recognition Type</label>
-            <select id="e_rec_${t.id}">${options(t.recognition_type)}</select>
-
-            <label>Website URL</label>
-            <input id="e_web_${t.id}" type="text" value="${t.website_url||''}"/>
-
-            <label>Original Territory Note</label>
-            <textarea id="e_terr_${t.id}" rows="2">${t.original_territory_note||''}</textarea>
-
-            <div class="actions">
-              <button class="primary" onclick="saveEdit(${t.id})">Save</button>
-              <button class="ghost" onclick="cancelEdit()">Cancel</button>
-            </div>
-            <div id="e_msg_${t.id}" class="muted"></div>
-          </div>
+    list.innerHTML = TRIBES.map(t => `
+      <li class="item">
+        <a class="item-link" href="/tribes-html/${t.id}">
+          <strong>${t.name}</strong>
+        </a>
+        ${t.description ? `<div class="item-desc">${t.description}</div>` : ``}
+        <div class="badges">
+          ${t.recognition_type ? `<span class="badge">${fmt(t.recognition_type)}</span>` : ``}
+          ${t.established_year ? `<span class="badge">Est. ${t.established_year}</span>` : ``}
         </div>
-      `;
-    }
-
-    window.startEdit = (id) => { editingId = id; render(); }
-    window.cancelEdit = () => { editingId = null; render(); }
-
-    window.saveEdit = async (id) => {
-      const msg = document.getElementById(`e_msg_${id}`);
-      msg.className='muted'; msg.textContent='Saving…';
-
-      const data = {};
-      const val = (sel) => document.getElementById(sel).value.trim();
-
-      const name = val(`e_name_${id}`); if (name) data.name = name;
-      const desc = val(`e_desc_${id}`); if (desc) data.description = desc;
-      const year = val(`e_year_${id}`); if (year) data.established_year = Number(year);
-      const rec  = val(`e_rec_${id}`);  if (rec)  data.recognition_type = rec;
-      const web  = val(`e_web_${id}`);  if (web)  data.website_url = web;
-      const terr = val(`e_terr_${id}`); if (terr) data.original_territory_note = terr;
-
-      try {
-        const r = await fetch(`/api/core/tribes/${id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        if (!r.ok) {
-          const err = await r.json().catch(()=>({detail:r.statusText}));
-          throw new Error(err.detail || 'Failed to update');
-        }
-        editingId = null;
-document.getElementById('status').textContent = 'Saved ✔';
-await load();
-      } catch (e) {
-        msg.className='error'; msg.textContent = e.message;
-      }
-    };
-
-    window.deleteTribe = async (id) => {
-      const t = byId(id);
-      if (!t) return;
-      if (!confirm(`Delete "${t.name}"? This cannot be undone.`)) return;
-
-      document.getElementById('status').textContent = 'Deleting…';
-      try {
-        const r = await fetch(`/api/core/tribes/${id}`, { method: 'DELETE' });
-        if (!r.ok && r.status !== 204) throw new Error('Failed to delete');
-        document.getElementById('status').textContent = 'Deleted ✔';
-await load();
-      } catch (e) {
-        document.getElementById('status').textContent = '';
-        alert(e.message);
-      }
-    };
-
-    // Add Tribe (POST)
-    document.getElementById('add-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const form = e.currentTarget;
-  const msg = document.getElementById('msg');
-  msg.className = 'muted';
-  msg.textContent = 'Saving…';
-
-  const data = Object.fromEntries(new FormData(form).entries());
-  if (!data.name) { msg.className='error'; msg.textContent='Name is required.'; return; }
-
-  if (data.established_year === '') delete data.established_year;
-  else data.established_year = Number(data.established_year);
-  if (data.recognition_type === '') delete data.recognition_type;
-  if (data.website_url === '') delete data.website_url;
-  if (data.original_territory_note === '') delete data.original_territory_note;
-  if (data.description === '') delete data.description;
-
-  try {
-    const r = await fetch('/api/core/tribes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (!r.ok) {
-      const err = await r.json().catch(()=>({detail:r.statusText}));
-      throw new Error(err.detail || 'Failed to create tribe');
-    }
-
-    // ✅ refresh from server (keeps backend sort/filter)
-    await load();
-    form.reset();
-    msg.className='success';
-    msg.textContent='Added ✔';
-
-  } catch (err) {
-    msg.className='error';
-    msg.textContent = err.message;
+      </li>
+    `).join('');
   }
-});
 
-document.getElementById('q').addEventListener('input', () => load());
-document.getElementById('sort').addEventListener('change', () => load());
-document.getElementById('clear').addEventListener('click', () => {
-document.getElementById('q').value = '';
+  // UI bindings
+  document.getElementById('q').addEventListener('input', () => load());
+  document.getElementById('sort').addEventListener('change', () => load());
+  document.getElementById('clear').addEventListener('click', () => {
+    document.getElementById('q').value = '';
+    load();
+  });
+
+  // initial
   load();
-});
-load();
-  </script>
-</body>
-</html>
+</script>
+{% endblock %}

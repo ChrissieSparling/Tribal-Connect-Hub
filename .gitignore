@@ -138,3 +138,22 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
+# --- Python / FastAPI ---
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+
+# SQLite databases
+*.db
+*.sqlite3
+
+# --- Node ---
+node_modules/
+
+# OS junk
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+

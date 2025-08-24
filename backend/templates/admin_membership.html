@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Membership Review — Admin{% endblock %}
+{% block content %}
+<div class="auth-card" style="max-width:800px;margin:2rem auto;">
+  <h1>Membership Review</h1>
+  <p class="muted">Pending members awaiting verification.</p>
+
+  {% if message %}
+    <p class="muted" style="color:#0a7a0a; margin-top:.75rem;">{{ message }}</p>
+  {% endif %}
+  {% if error %}
+    <p class="muted" style="color:#b00020; margin-top:.75rem;">{{ error }}</p>
+  {% endif %}
+
+  <table style="width:100%; border-collapse: collapse; margin-top:1rem;">
+    <thead>
+      <tr>
+        <th style="text-align:left; border-bottom:1px solid #ddd;">User</th>
+        <th style="text-align:left; border-bottom:1px solid #ddd;">Email</th>
+        <th style="text-align:left; border-bottom:1px solid #ddd;">Tribe</th>
+        <th style="text-align:left; border-bottom:1px solid #ddd;">ID</th>
+        <th style="border-bottom:1px solid #ddd;"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in pending %}
+      <tr>
+        <td style="padding:.4rem 0;">{{ u.username }}</td>
+        <td>{{ u.email }}</td>
+        <td>{{ {1:'Snoqualmie',2:'Tulalip',3:'Yakama'}.get(u.tribe_id, '—') }}</td>
+        <td>{{ u.tribal_id_number or '—' }}</td>
+        <td>
+          <form action="/admin/memberships/{{ u.id }}/approve" method="post" style="display:inline;">
+            <button type="submit">Approve</button>
+          </form>
+          <form action="/admin/memberships/{{ u.id }}/deny" method="post" style="display:inline; margin-left:.5rem;">
+            <button type="submit">Deny</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if not pending %}
+      <tr><td colspan="5" class="muted" style="padding:.5rem 0;">No pending members 🎉</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

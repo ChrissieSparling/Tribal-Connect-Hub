@@ -31,6 +31,7 @@ from fastapi import UploadFile, File, Form
 from sqlalchemy import DateTime, Float
 from datetime import datetime
 import qrcode
+import os
 from fastapi.responses import StreamingResponse
 from io import BytesIO
 from sqlalchemy import Date
