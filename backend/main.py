@@ -1,5 +1,8 @@
 # main.py
 from fastapi import FastAPI, HTTPException, Request, Form
+from .tenants import router as tenants_router
+from .approvals import router as approvals_router
+from .audit import router as audit_router
 from fastapi import status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -8,7 +11,7 @@ from pydantic import BaseModel
 from typing import Dict, List
 from datetime import date
 from fastapi.middleware.cors import CORSMiddleware
-from models import User, Base
+from .models import User, Base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError
@@ -18,8 +21,10 @@ from starlette.middleware.sessions import SessionMiddleware
 import os
 import traceback
 import secrets
+
 # pull in the router + startup hook
 from tribal_core import router as core_router, register_events as core_register
+
 # handy dependency (optional but cleaner)
 from contextlib import contextmanager
 
@@ -58,6 +63,9 @@ templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 # 🔗 Include the Tribal Core API under /api to avoid path collisions
 app.include_router(core_router, prefix="/api")
+app.include_router(tenants_router)
+app.include_router(approvals_router)
+app.include_router(audit_router)
 
 # 🔧 Register DB/table creation + seeding at startup
 core_register(app)

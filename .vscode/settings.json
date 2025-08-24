@@ -6,6 +6,7 @@
         "anyio",
         "appdirs",
         "appengine",
+        "appr",
         "asgi",
         "asyncio",
         "Aurrick",
