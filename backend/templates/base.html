@@ -4,12 +4,18 @@
   <meta charset="UTF-8" >
   <meta name="viewport" content="width=device-width, initial-scale=1.0" >
   <title>{% block title %}TribalConnect Hub{% endblock %}</title>
-  <!-- Static CSS (Starlette uses 'path', not 'filename') -->
-  <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}" >
+
+  <!-- Static CSS -->
+<link rel="stylesheet" href="{{ url_for('static', path='css/styles.css') }}">
+<img src="{{ url_for('static', path='images/tribalconnect-banner.png') }}"
+    alt="TribalConnect" class="h-10 w-auto">
+
+
   {% block head_extra %}{% endblock %}
 </head>
 <body>
   <header>
+    <h1><a href="/">TribalConnect Hub</a></h1>
     <nav>
       <a href="/">Home</a> |
       <a href="/login">Login</a> |

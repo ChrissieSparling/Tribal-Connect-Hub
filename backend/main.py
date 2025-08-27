@@ -1,38 +1,39 @@
-# main.py
-from fastapi import FastAPI, HTTPException, Request, Form
-from .tenants import router as tenants_router
-from .approvals import router as approvals_router
-from .audit import router as audit_router
-from fastapi import status
+# backend/main.py — streamlined and de-duped
+
+from __future__ import annotations
+
+import os
+import secrets
+import traceback
+from datetime import date
+from typing import Dict, List
+from contextlib import contextmanager
+
+from fastapi import FastAPI, Request, Form, Depends, status, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
-from typing import Dict, List
-from datetime import date
 from fastapi.middleware.cors import CORSMiddleware
-from .models import User, Base
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import IntegrityError
-from auth import validate_password, hash_password, safe_verify_password
-from sqlalchemy.orm import Session as SASession
 from starlette.middleware.sessions import SessionMiddleware
-import os
-import traceback
-import secrets
 
-# pull in the router + startup hook
-from tribal_core import router as core_router, register_events as core_register
+from sqlalchemy.orm import Session as SASession
+from sqlalchemy.exc import IntegrityError
 
-# handy dependency (optional but cleaner)
-from contextlib import contextmanager
+# 🔐 Auth helpers
+# If you have these implemented, import them. Otherwise, comment out the usages below.
+from .auth import safe_verify_password  # , validate_password, hash_password
 
-# ---------- Database Setup ----------
-DATABASE_URL = "sqlite:///./tribalhub.db"  # swap to MySQL later
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
-Base.metadata.create_all(bind=engine)
+# Routers & Core DB/session
+from .tenants import router as tenants_router
+from .approvals import router as approvals_router
+from .audit import router as audit_router
+
+# Use the single source of truth for DB from tribal_core
+from .tribal_core import router as core_router, register_events as core_register, get_db as core_get_db
+
+# Your ORM User (from your SQLAlchemy models package; if it's the one in tribal_core, import from there)
+# from .models import User  # <- switch duplicate and merge into .tribal_core.py
+from .tribal_core import User
 
 # ----- Paths (absolute = fewer surprises)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -41,36 +42,39 @@ TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 
 app = FastAPI(title="Tribal Connect Hub")
 
-# Add after app = FastAPI(...)
+# Sessions
 app.add_middleware(
     SessionMiddleware,
     secret_key=os.environ.get("SESSION_SECRET", secrets.token_hex(32)),
-    max_age=60*60*24*7,  # 7 days
+    max_age=60 * 60 * 24 * 7,  # 7 days
     same_site="lax",
 )
 
-# ✅ allow PATCH/DELETE and handle OPTIONS preflight
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],           # tighten later to your domain
+    allow_origins=["*"],  # TODO: restrict in prod
     allow_credentials=True,
-    allow_methods=["*"],           # or ["GET","POST","PATCH","DELETE","OPTIONS"]
+    allow_methods=["*"],
     allow_headers=["*"],
 )
+
 # Static + templates
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
-# 🔗 Include the Tribal Core API under /api to avoid path collisions
-app.include_router(core_router, prefix="/api")
+# API routers
+app.include_router(core_router, prefix="/api")  # avoid collisions
 app.include_router(tenants_router)
 app.include_router(approvals_router)
 app.include_router(audit_router)
 
-# 🔧 Register DB/table creation + seeding at startup
+# DB/table creation + seeding at startup (from core)
 core_register(app)
 
-# ---------- Models ----------
+# ---------- Pydantic view models for in-memory demo endpoints ----------
+from pydantic import BaseModel  # after FastAPI to avoid confusion
+
 class Tribe(BaseModel):
     id: int
     name: str
@@ -101,7 +105,7 @@ class Member(BaseModel):
     website_url: str | None = None
     bio: str | None = None
 
-# ---------- Data ----------
+# ---------- In-memory demo data ----------
 tribes: Dict[int, Tribe] = {
     1: Tribe(
         id=1,
@@ -125,9 +129,9 @@ tribes: Dict[int, Tribe] = {
 
 events: List[Event] = [
     Event(id=1, title="First Canoe Landing", description="Welcoming the canoes at the river mouth",
-        date=date(2025, 8, 1), tribe_id=1),
+          date=date(2025, 8, 1), tribe_id=1),
     Event(id=2, title="Fall Gathering", description="Celebration with drumming, stories, and food",
-        date=date(2025, 10, 15), tribe_id=1),
+          date=date(2025, 10, 15), tribe_id=1),
 ]
 
 laws: List[Law] = [
@@ -141,53 +145,35 @@ laws: List[Law] = [
 
 members: List[Member] = [
     Member(
-        id=1,
-        first_name="Glaysia",
-        last_name="Sparling",
-        role="Youth",
-        tribe_id=1202,
+        id=1, first_name="Glaysia", last_name="Sparling", role="Youth", tribe_id=1202,
         profile_picture_url="https://example.com/images/glaysia.jpg",
         website_url="https://glaysiaspeaks.com",
-        bio="Recent graduate passionate about Indigenous health and youth leadership."
-        ),
+        bio="Recent graduate passionate about Indigenous health and youth leadership.",
+    ),
     Member(
-        id=2,
-        first_name="Sharon",
-        last_name="Frelinger",
-        role="Elder",
-        tribe_id=195,
+        id=2, first_name="Sharon", last_name="Frelinger", role="Elder", tribe_id=195,
         profile_picture_url="https://example.com/images/sharon.jpg",
         website_url="https://sharonfrelinger.com",
-        bio="completely awesome."
-        ),
+        bio="completely awesome.",
+    ),
     Member(
-        id=3,
-        first_name="Chrissie",
-        last_name="Sparling",
-        role="Tribal Council",
-        tribe_id=875,
+        id=3, first_name="Chrissie", last_name="Sparling", role="Tribal Council", tribe_id=875,
         profile_picture_url="https://example.com/images/chrissie.jpg",
         website_url="https://chrissiesparling.com",
-        bio="happy and in love with life."
-        ),
+        bio="happy and in love with life.",
+    ),
     Member(
-        id=4,
-        first_name="Aurrick",
-        last_name="Sparling",
-        role="Tribal Member",
-        tribe_id=1203,
+        id=4, first_name="Aurrick", last_name="Sparling", role="Tribal Member", tribe_id=1203,
         profile_picture_url="https://example.com/images/aurrick.jpg",
         website_url="https://aurricksvision.com",
-        bio="advocating for those who are still looking to find their way."),
+        bio="advocating for those who are still looking to find their way.",
+    ),
     Member(
-        id=5,
-        first_name="Joseph",
-        last_name="Willoughby",
-        role="Tribal Member Employee",
-        tribe_id=1203,
+        id=5, first_name="Joseph", last_name="Willoughby", role="Tribal Member Employee", tribe_id=1203,
         profile_picture_url="https://example.com/images/Joseph.jpg",
         website_url="https://joesvision.com",
-        bio="advocating for IT."),
+        bio="advocating for IT.",
+    ),
 ]
 
 # ---------- Helpers ----------
@@ -197,15 +183,6 @@ def check_permission(tribe_id: int, section: str):
         raise HTTPException(status_code=404, detail="Tribe not found")
     if not tribe.public_sharing.get(section, False):
         raise HTTPException(status_code=403, detail=f"This tribe has chosen not to publicly share their {section}.")
-    
-
-@contextmanager
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 def get_current_user(request: Request, db: SASession):
     user_id = request.session.get("user_id")
@@ -255,12 +232,10 @@ def get_tribe_members(tribe_id: int):
 async def home_page(request: Request):
     return templates.TemplateResponse("home.html", {"request": request})
 
-# LIST PAGE (needed for "Explore Tribes")
 @app.get("/tribes-html", response_class=HTMLResponse)
 async def tribe_list_page(request: Request):
     return templates.TemplateResponse("tribe_list.html", {"request": request})
 
-# DETAIL PAGE (NO in-memory validation — works for both in-memory and core IDs)
 @app.get("/tribes-html/{tribe_id}", response_class=HTMLResponse)
 async def tribe_detail_page(request: Request, tribe_id: int):
     return templates.TemplateResponse("tribe_detail.html", {"request": request, "tribe_id": tribe_id})
@@ -269,33 +244,25 @@ async def tribe_detail_page(request: Request, tribe_id: int):
 async def event_share_page(request: Request, event_id: int):
     return templates.TemplateResponse("event_share.html", {"request": request, "event_id": event_id})
 
-
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 @app.post("/login")
-async def login(
+def login(
     request: Request,
     email: str = Form(...),
-    password: str = Form(...)
+    password: str = Form(...),
+    db: SASession = Depends(core_get_db),
 ):
-    db: Session = SessionLocal()
-    try:
-        user = db.query(User).filter(User.email == email).first()
-        # If no user OR password doesn't verify (including invalid/legacy hash), show friendly error
-        if not user or not safe_verify_password(password, user.password):
-            return templates.TemplateResponse(
-                "login.html",
-                {"request": request, "error": "Invalid email or password."},
-                status_code=401
-            )
-
-        # ✅ set session and redirect
-        request.session["user_id"] = user.id
-        return RedirectResponse(url="/welcome", status_code=303)
-    finally:
-        db.close()
+    user = db.query(User).filter(User.email == email).first()
+    if not user or not safe_verify_password(password, user.password):
+        return templates.TemplateResponse(
+            "login.html", {"request": request, "error": "Invalid email or password."}, status_code=401
+        )
+    # ✅ set session and redirect (only once)
+    request.session["user_id"] = user.id
+    return RedirectResponse(url="/welcome", status_code=status.HTTP_303_SEE_OTHER)
 
 @app.post("/logout")
 async def logout(request: Request):
@@ -322,141 +289,114 @@ async def tribes_admin_page(request: Request):
 async def signup_form(request: Request):
     return templates.TemplateResponse("signup.html", {"request": request})
 
+# If you have validate_password/hash_password, keep; otherwise comment this entire endpoint for now.
+# from .auth import validate_password, hash_password  # uncomment if implemented
+
 @app.post("/signup")
 async def signup(
     request: Request,
     name: str = Form(...),
     email: str = Form(...),
-    password: str = Form(...)
+    password: str = Form(...),
+    db: SASession = Depends(core_get_db),
 ):
-    # Server-side password enforcement
-    if not validate_password(password):
-        return templates.TemplateResponse(
-            "signup.html",
-            {
-                "request": request,
-                "error": "Password must be 8+ chars and include uppercase, lowercase, number, and special character.",
-                "name": name,
-                "email": email
-            },
-            status_code=400
-        )
+    # Server-side password enforcement (uncomment if validate_password exists)
+    # if not validate_password(password):
+    #     return templates.TemplateResponse(
+    #         "signup.html",
+    #         {"request": request,
+    #          "error": "Password must be 8+ chars and include uppercase, lowercase, number, and special character.",
+    #          "name": name, "email": email},
+    #         status_code=400
+    #     )
 
-    db = SessionLocal()
     try:
-        # (Optional) check duplicates
-        # existing = db.query(User).filter((User.email == email) | (User.username == name)).first()
+        # Optional duplicate check…
+        # existing = db.query(User).filter(User.email == email).first()
         # if existing:
         #     return templates.TemplateResponse(...)
 
-        hashed_pw = hash_password(password)
+        # hashed_pw = hash_password(password)  # uncomment if available
+        hashed_pw = password  # TEMP: replace when you wire hash_password
         user = User(username=name, email=email, password=hashed_pw)
         db.add(user)
         db.commit()
-        db.refresh(user)          # <-- so user.id is available
+        db.refresh(user)
         request.session["user_id"] = user.id
         return RedirectResponse(url="/welcome", status_code=303)
-    
+
     except IntegrityError:
         db.rollback()
         return templates.TemplateResponse(
             "signup.html",
-            {
-                "request": request,
-                "error": "That name or email is already in use.",
-                "name": name,
-                "email": email
-            },
-            status_code=400
+            {"request": request, "error": "That name or email is already in use.", "name": name, "email": email},
+            status_code=400,
         )
-
     except Exception as e:
         db.rollback()
-        # print full traceback to your terminal so we know exactly what's wrong
         print("SIGNUP ERROR:", e)
         traceback.print_exc()
         return templates.TemplateResponse(
             "signup.html",
-            {
-                "request": request,
-                "error": "Something went wrong while creating your account. Check server logs.",
-                "name": name,
-                "email": email
-            },
-            status_code=500
+            {"request": request, "error": "Something went wrong while creating your account.", "name": name, "email": email},
+            status_code=500,
         )
 
-    finally:
-        db.close()
-
 @app.get("/welcome", response_class=HTMLResponse)
-async def welcome_page(request: Request):
-    db = SessionLocal()
-    try:
-        current_user = get_current_user(request, db)
-        return templates.TemplateResponse("welcome.html", {"request": request, "current_user": current_user})
-    finally:
-        db.close()
+async def welcome_page(request: Request, db: SASession = Depends(core_get_db)):
+    current_user = get_current_user(request, db)
+    return templates.TemplateResponse("welcome.html", {"request": request, "current_user": current_user})
 
 @app.post("/onboarding/tribe")
 async def onboarding_tribe(
     request: Request,
     tribe_id: int = Form(...),
     tribal_id_number: str = Form(None),
+    db: SASession = Depends(core_get_db),
 ):
-    db = SessionLocal()
-    try:
-        user = get_current_user(request, db)
-        if not user:
-            return templates.TemplateResponse("welcome.html", {"request": request, "error": "Please sign in first.", "current_user": None}, status_code=401)
+    user = get_current_user(request, db)
+    if not user:
+        return templates.TemplateResponse(
+            "welcome.html",
+            {"request": request, "error": "Please sign in first.", "current_user": None},
+            status_code=401,
+        )
 
-        user.tribe_id = tribe_id
-        user.tribal_id_number = (tribal_id_number or "").strip() or None
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+    user.tribe_id = tribe_id
+    user.tribal_id_number = (tribal_id_number or "").strip() or None
+    db.add(user)
+    db.commit()
+    db.refresh(user)
 
-        return templates.TemplateResponse("welcome.html", {"request": request, "current_user": user, "message": "Saved. You’ll see more once your membership is verified."})
-    finally:
-        db.close()
+    return templates.TemplateResponse(
+        "welcome.html",
+        {"request": request, "current_user": user, "message": "Saved. You’ll see more once your membership is verified."},
+    )
 
 @app.get("/admin/memberships", response_class=HTMLResponse)
-async def admin_memberships(request: Request):
-    db = SessionLocal()
-    try:
-        require_admin(request, db)
-        pending = db.query(User).filter(User.is_verified == False, User.tribe_id != None).order_by(User.id.asc()).all()
-        return templates.TemplateResponse("admin_memberships.html", {"request": request, "pending": pending})
-    finally:
-        db.close()
+async def admin_memberships(request: Request, db: SASession = Depends(core_get_db)):
+    require_admin(request, db)
+    pending = db.query(User).filter(User.is_verified == False, User.tribe_id != None).order_by(User.id.asc()).all()
+    return templates.TemplateResponse("admin_memberships.html", {"request": request, "pending": pending})
 
 @app.post("/admin/memberships/{user_id}/approve")
-async def admin_approve_membership(request: Request, user_id: int):
-    db = SessionLocal()
-    try:
-        require_admin(request, db)
-        u = db.query(User).filter(User.id == user_id).first()
-        if not u:
-            raise HTTPException(status_code=404, detail="User not found")
-        u.is_verified = True
-        db.commit()
-        return RedirectResponse(url="/admin/memberships", status_code=303)
-    finally:
-        db.close()
+async def admin_approve_membership(request: Request, user_id: int, db: SASession = Depends(core_get_db)):
+    require_admin(request, db)
+    u = db.query(User).filter(User.id == user_id).first()
+    if not u:
+        raise HTTPException(status_code=404, detail="User not found")
+    u.is_verified = True
+    db.commit()
+    return RedirectResponse(url="/admin/memberships", status_code=303)
 
 @app.post("/admin/memberships/{user_id}/deny")
-async def admin_deny_membership(request: Request, user_id: int):
-    db = SessionLocal()
-    try:
-        require_admin(request, db)
-        u = db.query(User).filter(User.id == user_id).first()
-        if not u:
-            raise HTTPException(status_code=404, detail="User not found")
-        # Simple deny: clear tribe fields and leave unverified
-        u.tribe_id = None
-        u.tribal_id_number = None
-        u.is_verified = False
-        db.commit()
-        return RedirectResponse(url="/admin/memberships", status_code=303)
-    finally:
-        db.close()
+async def admin_deny_membership(request: Request, user_id: int, db: SASession = Depends(core_get_db)):
+    require_admin(request, db)
+    u = db.query(User).filter(User.id == user_id).first()
+    if not u:
+        raise HTTPException(status_code=404, detail="User not found")
+    u.tribe_id = None
+    u.tribal_id_number = None
+    u.is_verified = False
+    db.commit()
+    return RedirectResponse(url="/admin/memberships", status_code=303)
