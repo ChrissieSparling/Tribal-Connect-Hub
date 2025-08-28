@@ -9,7 +9,7 @@ from datetime import date
 from typing import Dict, List
 from contextlib import contextmanager
 
-from fastapi import FastAPI, Request, Form, Depends, status, HTTPException
+from fastapi import FastAPI, Request, Form, Depends, status, HTTPException, APIRouter
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -20,20 +20,22 @@ from sqlalchemy.orm import Session as SASession
 from sqlalchemy.exc import IntegrityError
 
 # 🔐 Auth helpers
-# If you have these implemented, import them. Otherwise, comment out the usages below.
-from .auth import safe_verify_password  # , validate_password, hash_password
+from common.auth import safe_verify_password   # , validate_password, hash_password
 
 # Routers & Core DB/session
-from .tenants import router as tenants_router
-from .approvals import router as approvals_router
-from .audit import router as audit_router
+from tenants import router as tenants_router
+from approvals import router as approvals_router
+from audit import router as audit_router
+from app.api import api_router
+from app.api.routes import health
+
 
 # Use the single source of truth for DB from tribal_core
-from .tribal_core import router as core_router, register_events as core_register, get_db as core_get_db
+from tribal_core import router as core_router, register_events as core_register, get_db as core_get_db
 
 # Your ORM User (from your SQLAlchemy models package; if it's the one in tribal_core, import from there)
 # from .models import User  # <- switch duplicate and merge into .tribal_core.py
-from .tribal_core import User
+from tribal_core import User
 
 # ----- Paths (absolute = fewer surprises)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -68,6 +70,7 @@ app.include_router(core_router, prefix="/api")  # avoid collisions
 app.include_router(tenants_router)
 app.include_router(approvals_router)
 app.include_router(audit_router)
+app.include_router(health.router) 
 
 # DB/table creation + seeding at startup (from core)
 core_register(app)
