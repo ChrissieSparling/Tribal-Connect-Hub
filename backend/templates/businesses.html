@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{%- extends "layout.html" -%}
 
 {% block title %}Businesses · TribalConnect{% endblock %}
 
@@ -18,7 +18,9 @@
 <p class="muted">Discover Native-owned shops and services. Filter by tribe or category.</p>
 
 <div class="toolbar">
+  <label for="tribe">Tribe:</label>
   <select id="tribe"></select>
+  <label for="category">Category:</label>
   <select id="category"></select>
   <input id="q" type="text" placeholder="Search name/description…">
   <label><input id="featured" type="checkbox"> Featured</label>

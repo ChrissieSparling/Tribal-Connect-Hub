@@ -1,19 +1,205 @@
+{# html-validate-disable-next non-document-content-before-doctype #}
+{%- extends "layout.html" -%}
 
-{% extends 'layout.html' %}
+{% block title %}Home • Tribal Connect Hub{% endblock %}
+
 {% block content %}
-<div class="container py-4">
-  <h1 class="mb-3">Native-Owned Business Registry & TERO Hub</h1>
-  <div class="row">
-    {% for c in categories %}
-      <div class="col-md-6 mb-3">
-        <div class="card h-100">
-          <div class="card-body">
-            <h3 class="card-title"><a href="/c/{{ c.slug }}">{{ c.name }}</a></h3>
-            <p class="card-text">{{ c.description }}</p>
-          </div>
-        </div>
-      </div>
-    {% endfor %}
+<section class="mb-5" role="region" aria-labelledby="res-title">
+  <h2 id="res-title" class="h4">Emergency &amp; Wellness Resources</h2>
+
+  <div class="form-check form-switch mb-2">
+    <input class="form-check-input" type="checkbox" id="anonToggle" aria-describedby="anon-help">
+    <label class="form-check-label" for="anonToggle">Anonymous mode</label>
   </div>
-</div>
+  <div id="anon-help" class="text-muted mb-3">
+    Hide identifying info in app requests (calls/texts still follow your device settings).
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100"><div class="card-body">
+        <h3 class="h5">988 Native Helpline</h3>
+        <p class="text-muted">24/7 crisis support. Call or chat.</p>
+        <a class="btn btn-primary me-2" href="tel:988" data-anon-preserve>Call 988</a>
+        <a class="btn btn-outline-primary" href="https://988lifeline.org/chat/" target="_blank" rel="noopener" data-anon-preserve>Open Chat</a>
+      </div></div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100"><div class="card-body">
+        <h3 class="h5">Overdose &amp; Addiction</h3>
+        <p class="text-muted">Help for opioids, alcohol, substances.</p>
+        <a class="btn btn-primary me-2" href="/resources/overdose">Guides &amp; Naloxone</a>
+        <a class="btn btn-outline-primary" href="tel:1800662-HELP" data-anon-preserve>Call 1-800-662-HELP</a>
+      </div></div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100"><div class="card-body">
+        <h3 class="h5">Mental Health</h3>
+        <p class="text-muted">Find counselors and immediate support.</p>
+        <a class="btn btn-primary me-2" href="/resources/mental-health">Find Support</a>
+        <a class="btn btn-outline-primary" href="https://www.crisistextline.org/" target="_blank" rel="noopener" data-anon-preserve>Text Line</a>
+      </div></div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100"><div class="card-body">
+        <h3 class="h5">Medical Coverage</h3>
+        <p class="text-muted">IHS &amp; coverage options, step-by-step.</p>
+        <a class="btn btn-primary me-2" href="/resources/coverage">Get Covered</a>
+        <a class="btn btn-outline-primary" href="/resources/coverage?quickstart=1">Quick Start</a>
+      </div></div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100 border-danger"><div class="card-body">
+        <h3 class="h5">911 (US/Canada)</h3>
+        <p class="text-muted">Life-threatening emergency? Call now.</p>
+        <a class="btn btn-danger me-2" href="tel:911" data-anon-preserve>Call 911</a>
+        <a class="btn btn-outline-danger" href="https://www.google.com/maps/search/emergency+room+near+me" target="_blank" rel="noopener" data-anon-preserve>Nearest ER</a>
+      </div></div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100"><div class="card-body">
+        <h3 class="h5">Forums</h3>
+        <p class="text-muted">Community support &amp; peer knowledge.</p>
+        <a class="btn btn-primary" href="/forums">Enter Forums</a>
+      </div></div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100"><div class="card-body">
+        <h3 class="h5">Tribal Laws</h3>
+        <p class="text-muted">Browse public legal resources.</p>
+        <a class="btn btn-primary" href="/laws">Open Tribal Laws</a>
+      </div></div>
+    </div>
+  </div>
+
+  <p class="mt-3 small text-muted">
+    🛡️ We don’t sell data. In Anonymous mode we avoid attaching session/user IDs to in-app requests.
+    Phone calls/texts still share info your device or carrier requires.
+  </p>
+</section>
+
+<section class="mb-5" role="region" aria-labelledby="tribe-title">
+  <h2 id="tribe-title" class="h4">Participating Tribes</h2>
+  <p class="text-muted">Browse participating tribes and view public info.</p>
+
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <div class="form-floating">
+      <input id="q" type="text" class="form-control" placeholder="Search by name…" aria-label="Search tribes by name">
+      <label for="q">Search tribes by name</label>
+    </div>
+
+    <div class="form-floating">
+      <select id="sort" name="sort" class="form-select" aria-label="Sort tribes">
+        <option value="name_asc">Name (A→Z)</option>
+        <option value="name_desc">Name (Z→A)</option>
+        <option value="established_desc">Established (newest)</option>
+        <option value="established_asc">Established (oldest)</option>
+      </select>
+      <label for="sort">Sort tribes</label>
+    </div>
+
+    <button id="clear" type="button" class="btn btn-outline-secondary">Clear</button>
+    <span id="status" class="text-muted" role="status" aria-live="polite"></span>
+  </div>
+
+  <ul id="list" class="list-unstyled"><li class="text-muted">Loading…</li></ul>
+</section>
 {% endblock %}
+
+{% block scripts %}
+<script>
+  // Anonymous mode
+  const anonToggle = document.getElementById('anonToggle');
+  const anonHelp = document.getElementById('anon-help');
+  const anonPreserve = document.querySelectorAll('[data-anon-preserve]');
+
+  const savedAnon = localStorage.getItem('anonMode') === 'true';
+  if (anonToggle) {
+    anonToggle.checked = savedAnon;
+    const setText = (on) => anonHelp && (anonHelp.textContent = on
+      ? 'Anonymous mode is ON. Identifying info is hidden in app requests.'
+      : 'Hide identifying info in app requests (calls/texts still follow your device settings).');
+    setText(savedAnon);
+    anonToggle.addEventListener('change', () => {
+      const on = anonToggle.checked;
+      localStorage.setItem('anonMode', on);
+      setText(on);
+      anonPreserve.forEach(el => on ? el.setAttribute('data-anonymous','true')
+                                    : el.removeAttribute('data-anonymous'));
+    });
+  }
+
+  // Tribes list
+  const fmt = (s) => s ? s.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase()) : '';
+  let TRIBES = [];
+
+  async function loadTribes(){
+    const list = document.getElementById('list');
+    const status = document.getElementById('status');
+    if (!list) return;
+    list.innerHTML = '<li class="text-muted">Loading…</li>';
+    if (status) status.textContent = '';
+
+    try {
+      const q = (document.getElementById('q')?.value || '').trim();
+      const sort = document.getElementById('sort')?.value || 'name_asc';
+
+      const params = new URLSearchParams();
+      if (q) params.set('q', q);
+      params.set('sort', sort);
+      params.set('limit', 500);
+
+      const r = await fetch(`/api/core/tribes?${params.toString()}`);
+      if (!r.ok) throw new Error('Failed to load tribes');
+      TRIBES = await r.json();
+
+      renderTribes();
+      if (status) status.textContent = `${TRIBES.length} tribe${TRIBES.length===1?'':'s'} found`;
+    } catch (e) {
+      list.innerHTML = `<li class="text-danger">Error: ${e.message}</li>`;
+    }
+  }
+
+  function renderTribes(){
+    const list = document.getElementById('list');
+    if (!list) return;
+    if (!Array.isArray(TRIBES) || TRIBES.length === 0) {
+      list.innerHTML = '<li class="text-muted">No tribes found.</li>';
+      return;
+    }
+    list.innerHTML = TRIBES.map(t => `
+      <li class="py-2 border-bottom">
+        <a class="text-decoration-none" href="/tribes-html/${t.id}">
+          <strong>${t.name}</strong>
+        </a>
+        ${t.description ? `<div class="text-muted small">${t.description}</div>` : ``}
+        <div class="d-flex gap-2 flex-wrap mt-1">
+          ${t.recognition_type ? `<span class="badge text-bg-light">${fmt(t.recognition_type)}</span>` : ``}
+          ${t.established_year ? `<span class="badge text-bg-light">Est. ${t.established_year}</span>` : ``}
+        </div>
+      </li>
+    `).join('');
+  }
+
+  document.getElementById('q')?.addEventListener('input', loadTribes);
+  document.getElementById('sort')?.addEventListener('change', loadTribes);
+  document.getElementById('clear')?.addEventListener('click', () => {
+    const q = document.getElementById('q'); if (q) q.value = '';
+    loadTribes();
+  });
+
+  // initial
+  loadTribes();
+</script>
+{% endblock %}
+{% block head %}
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+{% endblock %}
+
+{% block scripts %}

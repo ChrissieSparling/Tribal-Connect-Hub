@@ -26,7 +26,6 @@ from common.auth import safe_verify_password   # , validate_password, hash_passw
 from tenants import router as tenants_router
 from approvals import router as approvals_router
 from audit import router as audit_router
-from app.api import api_router
 from app.api.routes import health
 
 
@@ -62,7 +61,9 @@ app.add_middleware(
 )
 
 # Static + templates
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+if os.path.isdir(STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 # API routers
@@ -70,7 +71,7 @@ app.include_router(core_router, prefix="/api")  # avoid collisions
 app.include_router(tenants_router)
 app.include_router(approvals_router)
 app.include_router(audit_router)
-app.include_router(health.router) 
+app.include_router(health.router)
 
 # DB/table creation + seeding at startup (from core)
 core_register(app)
@@ -200,9 +201,9 @@ def require_admin(request: Request, db: SASession):
     return user
 
 # ---------- Routes (API / JSON) ----------
-@app.get("/health")
-def health():
-    return {"ok": True}
+# @app.get("/health")
+# def health():
+#     return {"ok": True}
 
 @app.get("/tribes", response_model=List[Tribe])
 def get_all_tribes():

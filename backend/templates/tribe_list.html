@@ -1,6 +1,9 @@
-{% extends "base.html" %}
+{# html-validate-disable-next non-document-content-before-doctype #}
+{%- extends "layout.html" -%}
 
-{% block head_extra %}
+{% block title %}Tribes • Tribal Connect Hub{% endblock %}
+
+{% block head %}
 <style>
   .item-list { list-style:none; padding:0; margin: 1rem 0; }
   .item { padding: .75rem 0; border-bottom: 1px solid #eee; }
@@ -14,22 +17,32 @@
 {% endblock %}
 
 {% block content %}
-<h1 class="page-title">Tribes</h1>
-<p class="muted">Browse participating tribes and view public info.</p>
+<section class="tribes" role="region" aria-labelledby="tribe-title">
+  <h2 id="tribe-title" class="h4">Participating Tribes</h2>
+  <p class="text-muted">Browse participating tribes and view public info.</p>
 
-<div class="toolbar">
-  <input id="q" type="text" placeholder="Search by name…" >
-  <select id="sort">
-    <option value="name_asc">Sort: Name (A→Z)</option>
-    <option value="name_desc">Sort: Name (Z→A)</option>
-    <option value="established_desc">Sort: Established (newest)</option>
-    <option value="established_asc">Sort: Established (oldest)</option>
-  </select>
-  <button id="clear" type="button">Clear</button>
-  <span id="status" class="muted"></span>
-</div>
+  <div class="toolbar">
+    <div>
+      <label class="visually-hidden" for="q">Search tribes by name</label>
+      <input id="q" type="text" class="form-control" placeholder="Search by name…" aria-label="Search tribes by name">
+    </div>
 
-<ul id="list" class="item-list"><li class="muted">Loading…</li></ul>
+    <div>
+      <label class="visually-hidden" for="sort">Sort tribes</label>
+      <select id="sort" name="sort" class="form-select" aria-label="Sort tribes">
+        <option value="name_asc">Sort: Name (A→Z)</option>
+        <option value="name_desc">Sort: Name (Z→A)</option>
+        <option value="established_desc">Sort: Established (newest)</option>
+        <option value="established_asc">Sort: Established (oldest)</option>
+      </select>
+    </div>
+
+    <button id="clear" type="button" class="btn btn-outline-secondary">Clear</button>
+    <span id="status" class="text-muted" role="status" aria-live="polite"></span>
+  </div>
+
+  <ul id="list" class="item-list"><li class="muted">Loading…</li></ul>
+</section>
 {% endblock %}
 
 {% block scripts %}
@@ -37,16 +50,15 @@
   const fmt = (s) => s ? s.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase()) : '';
   let TRIBES = [];
 
-  async function load() {
+  async function load(){
     const list = document.getElementById('list');
     const status = document.getElementById('status');
     list.innerHTML = '<li class="muted">Loading…</li>';
-    status.textContent = '';
+    if (status) status.textContent = '';
 
     try {
-      // Pull from Core DB (this has your 30 seeded tribes)
-      const q = document.getElementById('q').value.trim();
-      const sort = document.getElementById('sort').value;
+      const q = (document.getElementById('q')?.value || '').trim();
+      const sort = document.getElementById('sort')?.value || 'name_asc';
 
       const params = new URLSearchParams();
       if (q) params.set('q', q);
@@ -58,12 +70,13 @@
       TRIBES = await r.json();
 
       render();
+      if (status) status.textContent = `${TRIBES.length} tribe${TRIBES.length===1?'':'s'} found`;
     } catch (e) {
-      list.innerHTML = `<li class="muted" style="color:#b00020">Error: ${e.message}</li>`;
+      list.innerHTML = `<li class="text-danger">Error: ${e.message}</li>`;
     }
   }
 
-  function render() {
+  function render(){
     const list = document.getElementById('list');
     if (!Array.isArray(TRIBES) || TRIBES.length === 0) {
       list.innerHTML = '<li class="muted">No tribes found.</li>';
@@ -84,15 +97,14 @@
     `).join('');
   }
 
-  // UI bindings
-  document.getElementById('q').addEventListener('input', () => load());
-  document.getElementById('sort').addEventListener('change', () => load());
-  document.getElementById('clear').addEventListener('click', () => {
-    document.getElementById('q').value = '';
+  document.getElementById('q')?.addEventListener('input', load);
+  document.getElementById('sort')?.addEventListener('change', load);
+  document.getElementById('clear')?.addEventListener('click', () => {
+    const q = document.getElementById('q'); if (q) q.value = '';
     load();
   });
 
-  // initial
   load();
 </script>
 {% endblock %}
+{# html-validate-disable-next non-document-content-after-html #}
