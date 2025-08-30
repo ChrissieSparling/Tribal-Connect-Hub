@@ -3,10 +3,10 @@ name: Release (zip sources)
 on:
   push:
     tags:
-      - 'v*.*.*'   # e.g., v0.1.0, v1.2.3
+      - 'v*.*.*'   # e.g. v0.1.0
 
 permissions:
-  contents: write   # needed to create a GitHub Release and upload assets
+  contents: write
 
 jobs:
   release:
@@ -15,14 +15,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.BOT_TOKEN }}
 
-      # Prepare a clean dist folder
       - name: Prepare dist
         run: |
           rm -rf dist
           mkdir -p dist
 
-      # Zip backend (exclude venv, __pycache__, node stuff, etc.)
       - name: Package backend
         run: |
           zip -r dist/backend.zip backend \
@@ -34,7 +34,6 @@ jobs:
                "backend/.DS_Store" \
                "backend/*.pyc"
 
-      # Zip web if it exists (optional)
       - name: Detect web workspace
         id: detect_web
         run: |
@@ -44,7 +43,7 @@ jobs:
             echo "present=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Build web (optional)
+      - name: Set up Node (web)
         if: steps.detect_web.outputs.present == 'true'
         uses: actions/setup-node@v4
         with:
@@ -54,17 +53,15 @@ jobs:
         if: steps.detect_web.outputs.present == 'true'
         run: |
           (cd web && npm ci && npm run build)
-          # Adjust "dist" if your web build outputs elsewhere
           zip -r dist/web.zip web/dist
 
       - name: List artifacts
-        run: |
-          echo "Artifacts:"
-          ls -lah dist
+        run: ls -lah dist || true
 
       - name: Create GitHub Release & upload assets
         uses: softprops/action-gh-release@v2
         with:
+          token: ${{ secrets.BOT_TOKEN }}
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
           draft: false
