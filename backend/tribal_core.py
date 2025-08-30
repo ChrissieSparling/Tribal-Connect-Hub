@@ -5,8 +5,7 @@ import os
 from datetime import date, datetime
 from enum import Enum
 from io import BytesIO
-from pathlib import Path as FilePath  # filesystem path type ONLY
-
+from pathlib import Path as FilePath
 # typing
 from typing import Optional, List, Dict, Literal, Generator
 
@@ -19,11 +18,11 @@ from fastapi import (
     File,
     Form,
     HTTPException,
-    Path,      # FastAPI's Path for route params ONLY
     Query,
     Request,
     UploadFile,
 )
+from fastapi import Path as PathParam
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -425,7 +424,7 @@ class BusinessPatch(BaseModel):
     is_featured: Optional[bool] = None
     is_active: Optional[bool] = None
     visibility: Optional[str] = None
-    class Config: 
+    class Config:
         extra = "forbid"
 
 class BusinessOut(BaseModel):

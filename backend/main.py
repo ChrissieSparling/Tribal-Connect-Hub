@@ -1,13 +1,12 @@
 # backend/main.py — streamlined and de-duped
-
 from __future__ import annotations
 
 import os
 import secrets
 import traceback
 from datetime import date
-from typing import Dict, List
-from contextlib import contextmanager
+from typing import Dict, List, Generator
+from contextlib import contextmanager, suppress
 
 from fastapi import FastAPI, Request, Form, Depends, status, HTTPException, APIRouter
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -35,6 +34,20 @@ from tribal_core import router as core_router, register_events as core_register,
 # Your ORM User (from your SQLAlchemy models package; if it's the one in tribal_core, import from there)
 # from .models import User  # <- switch duplicate and merge into .tribal_core.py
 from tribal_core import User
+
+# ---------------------- FIXED CONTEXT MANAGER ----------------------
+# @contextmanager
+# def db_session() -> Generator[SASession, None, None]:
+#     """Use a DB session outside of FastAPI dependency injection."""
+#     gen = core_get_db()      # FastAPI dependency generator that yields a Session
+#     db = next(gen)           # get the Session instance
+#     try:
+#         yield db             # hand it to caller
+#     finally:
+#         # ensure generator cleanup runs (close session)
+#         with suppress(StopIteration):
+#             next(gen)
+# # ------------------------------------------------------------------
 
 # ----- Paths (absolute = fewer surprises)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -75,6 +88,8 @@ app.include_router(health.router)
 
 # DB/table creation + seeding at startup (from core)
 core_register(app)
+
+
 
 # ---------- Pydantic view models for in-memory demo endpoints ----------
 from pydantic import BaseModel  # after FastAPI to avoid confusion

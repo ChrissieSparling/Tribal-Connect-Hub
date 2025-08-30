@@ -1,4 +1,4 @@
-name: Release
+name: Release (zip sources)
 
 on:
   push:
@@ -9,29 +9,32 @@ permissions:
   contents: write   # needed to create a GitHub Release and upload assets
 
 jobs:
-  build-and-release:
+  release:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ---------- Backend (Python) ----------
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Build backend dist
-        working-directory: backend
+      # Prepare a clean dist folder
+      - name: Prepare dist
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install build
-          python -m build
-          mkdir -p ../dist/backend
-          cp -r dist/* ../dist/backend/
+          rm -rf dist
+          mkdir -p dist
 
-      # ---------- Web (optional) ----------
+      # Zip backend (exclude venv, __pycache__, node stuff, etc.)
+      - name: Package backend
+        run: |
+          zip -r dist/backend.zip backend \
+            -x "backend/venv/**" \
+               "backend/**/__pycache__/**" \
+               "backend/.pytest_cache/**" \
+               "backend/.mypy_cache/**" \
+               "backend/.ruff_cache/**" \
+               "backend/.DS_Store" \
+               "backend/*.pyc"
+
+      # Zip web if it exists (optional)
       - name: Detect web workspace
         id: detect_web
         run: |
@@ -41,33 +44,25 @@ jobs:
             echo "present=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Set up Node (web)
+      - name: Build web (optional)
         if: steps.detect_web.outputs.present == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: web/package-lock.json
 
-      - name: Build web
+      - name: Package web (optional)
         if: steps.detect_web.outputs.present == 'true'
-        working-directory: web
         run: |
-          npm ci
-          npm run build
-          mkdir -p ../dist/web
-          # adjust if your build outputs to a different folder than "dist"
-          cp -r dist/* ../dist/web/
+          (cd web && npm ci && npm run build)
+          # Adjust "dist" if your web build outputs elsewhere
+          zip -r dist/web.zip web/dist
 
-      # ---------- Package summary ----------
       - name: List artifacts
         run: |
-          echo "Artifacts about to be released:"
-          find dist -maxdepth 2 -type f -print || true
+          echo "Artifacts:"
+          ls -lah dist
 
-      # ---------- Create GitHub Release + upload assets ----------
-      - name: Create Release
-        id: create_release
+      - name: Create GitHub Release & upload assets
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
@@ -75,4 +70,4 @@ jobs:
           draft: false
           prerelease: ${{ contains(github.ref_name, 'rc') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}
           files: |
-            dist/**/*
+            dist/*.zip
