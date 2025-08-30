@@ -1,5 +1,5 @@
-{# html-validate-disable-next non-document-content-before-doctype #}
-{%- extends "layout.html" -%}
+{% extends "base.html" %}
+
 {% block head_extra %}
 <style>
   body { font-family: system-ui, Arial, sans-serif; margin: 2rem; max-width: 900px; }

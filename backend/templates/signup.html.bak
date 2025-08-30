@@ -1,5 +1,4 @@
-{# html-validate-disable-next non-document-content-before-doctype #}
-{%- extends "layout.html" -%}
+{% extends "base.html" %}
 {% block title %}Sign Up — TribalConnect{% endblock %}
 
 {% block head_extra %}

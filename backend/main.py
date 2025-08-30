@@ -263,6 +263,11 @@ async def tribe_detail_page(request: Request, tribe_id: int):
 async def event_share_page(request: Request, event_id: int):
     return templates.TemplateResponse("event_share.html", {"request": request, "event_id": event_id})
 
+@app.get("/registry", response_class=HTMLResponse)
+async def registry_page(request: Request):
+    # If you have categories, pass them here; otherwise an empty list is fine.
+    return templates.TemplateResponse("registry.html", {"request": request, "categories": []})
+
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
