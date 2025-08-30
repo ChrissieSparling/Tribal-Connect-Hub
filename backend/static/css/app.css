@@ -1,0 +1,115 @@
+/* utilities */
+.muted {
+    color:#666;
+}
+
+.text-small {
+    font-size:.9rem;
+}
+
+.sr-only {
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+}
+
+/* general utilities */
+.maxw-840 { max-width: 840px; }
+.mt-2rem { margin-top: 2rem; }
+
+/* cards & grids */
+.grid {
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px,1fr));
+    gap:12px;
+}
+
+
+
+.card-media {
+    background:#fafafa;
+    padding:8px;
+    border:1px solid #eee;
+    border-radius:8px;
+}
+
+/* images */
+.img-cover {
+    width:100%;
+    aspect-ratio:4/3;
+    object-fit:cover;
+    border-radius:6px;
+}
+
+.card-photo img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+/* lists */
+.item-list {
+    list-style:none;
+    padding:0;
+    margin: 1rem 0;
+}
+
+.item {
+    padding:.75rem 0;
+    border-bottom:1px solid #eee;
+}
+
+.item-link {
+    text-decoration:none;
+    color:inherit;
+}
+
+.item-desc {
+    color:#444;
+    margin:.25rem 0;
+}
+
+.badges {
+    display:flex;
+    gap:.35rem;
+    flex-wrap:wrap;
+    margin-top:.25rem;
+}
+
+.badge-chip {
+    background:#f3f4f6;
+    color:#111;
+    border-radius:999px;
+    padding:.15rem .5rem;
+    font-size:.8rem;
+}
+
+.toolbar {
+    display:flex;
+    gap:.5rem;
+    align-items:center;
+    flex-wrap:wrap;
+}
+
+/* spacing helpers */
+.mt-1 {
+    margin-top:.25rem;
+}
+
+.mb-1 {
+    margin-bottom:.25rem;
+}
+
+/* layout helpers */
+.container-narrow { max-width: 840px; }
+.mt-2r { margin-top: 2rem; }
+
+/* optional: if you’re using “glass” anywhere */
+.glass {
+  background: rgb(255 255 255 / 8%); /* 8% opacity */
+/* stylelint-disable-next-line property-no-vendor-prefix */
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgb(255 255 255 / 15%);
+  border-radius: .75rem;
+}

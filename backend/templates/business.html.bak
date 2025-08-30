@@ -1,5 +1,5 @@
-{# html-validate-disable-next non-document-content-before-doctype #}
-{%- extends 'layout.html' %}
+
+{% extends 'layout.html' %}
 {% block content %}
 <div class="container py-4">
   <div class="row">
@@ -13,13 +13,11 @@
           <li><strong>{{ c.key }}:</strong> {{ c.value }}</li>
         {% endfor %}
       </ul>
-      {% if legal_links %}
-        <ul>
-          {% for l in legal_links %}
-            <li><a href="{{ l.url }}" target="_blank" rel="noopener">{{ l.label }}</a></li>
-          {% endfor %}
-        </ul>
-      {% endif %}
+      <ul>
+        {% for l in legal_links %}
+          <li><a href="{{ l.url }}" target="_blank" rel="noopener">{{ l.label }}</a></li>
+        {% endfor %}
+      </ul>
 
       <h5 class="mt-4">Community Reviews {% if avg_rating %}<span class="badge bg-success">Avg {{ avg_rating }}</span>{% endif %}</h5>
       {% if reviews %}
@@ -38,9 +36,8 @@
         <h6>Add a Review</h6>
         <input class="form-control mb-2" name="title" placeholder="Title" required>
         <textarea class="form-control mb-2" name="body" placeholder="Your experience" required></textarea>
-        <label for="review-rating" class="form-label">Rating (1-5)</label>
-        <input id="review-rating" class="form-control mb-2" name="rating" type="number" min="1" max="5" value="5" required placeholder="Enter rating from 1 to 5">
-        <button type="submit" class="btn btn-primary">Submit</button>
+        <input class="form-control mb-2" name="rating" type="number" min="1" max="5" value="5" required>
+        <button class="btn btn-primary">Submit</button>
       </form>
 
       <h5 class="mt-4">Clothing Fit & Cultural Notes</h5>
@@ -67,10 +64,10 @@
           <div class="col"><input class="form-control" name="purchased_size" placeholder="Purchased size"></div>
         </div>
         <textarea class="form-control my-2" name="fit_notes" placeholder="Fit notes (e.g., chest tight, sleeves long)"></textarea>
-        <label class="form-label" for="fit-scale-range">Fit scale (-2 small … +2 large)</label>
-        <input id="fit-scale-range" class="form-range" name="fit_scale" type="range" min="-2" max="2" value="0" title="Select fit scale from -2 (small) to +2 (large)" placeholder="-2 (small) to +2 (large)">
+        <label class="form-label">Fit scale (-2 small … +2 large)</label>
+        <input class="form-range" name="fit_scale" type="range" min="-2" max="2" value="0">
         <textarea class="form-control my-2" name="culture_notes" placeholder="Cultural significance (story, pattern, practice)"></textarea>
-        <button type="submit" class="btn btn-outline-primary">Submit</button>
+        <button class="btn btn-outline-primary">Submit</button>
       </form>
     </div>
     <div class="col-md-5">

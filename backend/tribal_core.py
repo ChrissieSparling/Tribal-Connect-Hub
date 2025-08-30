@@ -18,11 +18,11 @@ from fastapi import (
     File,
     Form,
     HTTPException,
+    Path as PathParam,
     Query,
     Request,
     UploadFile,
 )
-from fastapi import Path as PathParam
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -639,7 +639,7 @@ def list_tribes(
 
 
 @router.get("/tribes/{tribe_id}", response_model=TribeOut)
-def get_tribe(tribe_id: int = Path(..., gt=0), db: Session = Depends(get_db)):
+def get_tribe(tribe_id: int = PathParam(..., gt=0), db: Session = Depends(get_db)):
     tribe = db.get(Tribe, tribe_id)
     if not tribe:
         raise HTTPException(status_code=404, detail="Tribe not found")
@@ -648,7 +648,7 @@ def get_tribe(tribe_id: int = Path(..., gt=0), db: Session = Depends(get_db)):
 
 @router.patch("/tribes/{tribe_id}", response_model=TribeOut)
 def update_tribe(
-    tribe_id: int = Path(..., gt=0),
+    tribe_id: int = PathParam(..., gt=0),
     payload: TribeUpdate = ...,
     db: Session = Depends(get_db),
 ):
@@ -673,7 +673,7 @@ def update_tribe(
 
 
 @router.delete("/tribes/{tribe_id}", status_code=204)
-def delete_tribe(tribe_id: int = Path(..., gt=0), db: Session = Depends(get_db)):
+def delete_tribe(tribe_id: int = PathParam(..., gt=0), db: Session = Depends(get_db)):
     tribe = db.get(Tribe, tribe_id)
     if not tribe:
         raise HTTPException(status_code=404, detail="Tribe not found")
@@ -686,7 +686,7 @@ def delete_tribe(tribe_id: int = Path(..., gt=0), db: Session = Depends(get_db))
 # Routes: Events
 # --------------------------
 @router.get("/tribes/{tribe_id}/events", response_model=List[EventOut])
-def list_events_for_tribe(tribe_id: int = Path(..., gt=0), db: Session = Depends(get_db)):
+def list_events_for_tribe(tribe_id: int = PathParam(..., gt=0), db: Session = Depends(get_db)):
     tribe = db.get(Tribe, tribe_id)
     if not tribe:
         raise HTTPException(status_code=404, detail="Tribe not found")
@@ -696,7 +696,7 @@ def list_events_for_tribe(tribe_id: int = Path(..., gt=0), db: Session = Depends
 
 @router.post("/tribes/{tribe_id}/events", response_model=EventOut)
 def create_event_for_tribe(
-    tribe_id: int = Path(..., gt=0),
+    tribe_id: int = PathParam(..., gt=0),
     payload: EventCreate = ...,
     db: Session = Depends(get_db),
 ):
@@ -713,7 +713,7 @@ def create_event_for_tribe(
 
 
 @router.get("/events/{event_id}", response_model=EventOut)
-def get_event(event_id: int = Path(..., gt=0), db: Session = Depends(get_db)):
+def get_event(event_id: int = PathParam(..., gt=0), db: Session = Depends(get_db)):
     ev = db.get(Event, event_id)
     if not ev:
         raise HTTPException(status_code=404, detail="Event not found")
@@ -722,7 +722,7 @@ def get_event(event_id: int = Path(..., gt=0), db: Session = Depends(get_db)):
 
 @router.patch("/events/{event_id}", response_model=EventOut)
 def update_event(
-    event_id: int = Path(..., gt=0),
+    event_id: int = PathParam(..., gt=0),
     payload: EventUpdate = ...,
     db: Session = Depends(get_db),
 ):
@@ -743,7 +743,7 @@ def update_event(
 
 
 @router.delete("/events/{event_id}", status_code=204)
-def delete_event(event_id: int = Path(..., gt=0), db: Session = Depends(get_db)):
+def delete_event(event_id: int = PathParam(..., gt=0), db: Session = Depends(get_db)):
     ev = db.get(Event, event_id)
     if not ev:
         raise HTTPException(status_code=404, detail="Event not found")
@@ -928,7 +928,7 @@ def list_businesses(
 
 @router.post("/tribes/{tribe_id}/businesses", response_model=BusinessOut, status_code=201)
 def create_business_for_tribe(
-    tribe_id: int = Path(..., gt=0),
+    tribe_id: int = PathParam(..., gt=0),
     payload: BusinessIn = ...,
     db: Session = Depends(get_db),
 ):
@@ -943,7 +943,7 @@ def create_business_for_tribe(
     return biz
 
 @router.get("/businesses/{business_id}", response_model=BusinessOut)
-def get_business(business_id: int = Path(..., gt=0), db: Session = Depends(get_db)):
+def get_business(business_id: int = PathParam(..., gt=0), db: Session = Depends(get_db)):
     biz = db.get(Business, business_id)
     if not biz:
         raise HTTPException(404, "Business not found")
@@ -951,7 +951,7 @@ def get_business(business_id: int = Path(..., gt=0), db: Session = Depends(get_d
 
 @router.patch("/businesses/{business_id}", response_model=BusinessOut)
 def update_business(
-    business_id: int = Path(..., gt=0),
+    business_id: int = PathParam(..., gt=0),
     payload: BusinessPatch = ...,
     db: Session = Depends(get_db),
 ):
@@ -968,7 +968,7 @@ def update_business(
     return biz
 
 @router.delete("/businesses/{business_id}", status_code=204)
-def delete_business(business_id: int = Path(..., gt=0), db: Session = Depends(get_db)):
+def delete_business(business_id: int = PathParam(..., gt=0), db: Session = Depends(get_db)):
     biz = db.get(Business, business_id)
     if not biz:
         raise HTTPException(404, "Business not found")

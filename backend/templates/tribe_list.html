@@ -1,39 +1,25 @@
-{# html-validate-disable-next non-document-content-before-doctype #}
 {%- extends "layout.html" -%}
 
 {% block title %}Tribes • Tribal Connect Hub{% endblock %}
-
-{% block head %}
-<style>
-  .item-list { list-style:none; padding:0; margin: 1rem 0; }
-  .item { padding: .75rem 0; border-bottom: 1px solid #eee; }
-  .item-link { text-decoration:none; color:inherit; }
-  .item-desc { color:#444; margin:.25rem 0; }
-  .badges { display:flex; gap:.35rem; flex-wrap:wrap; margin-top:.25rem; }
-  .badge { background:#f3f4f6; color:#111; border-radius: 999px; padding:.15rem .5rem; font-size:.8rem; }
-  .toolbar { display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; }
-  .muted { color:#666; font-size:.9rem; }
-</style>
-{% endblock %}
 
 {% block content %}
 <section class="tribes" role="region" aria-labelledby="tribe-title">
   <h2 id="tribe-title" class="h4">Participating Tribes</h2>
   <p class="text-muted">Browse participating tribes and view public info.</p>
 
-  <div class="toolbar">
+  <div class="toolbar mb-3">
     <div>
-      <label class="visually-hidden" for="q">Search tribes by name</label>
+      <label class="sr-only" for="q">Search tribes by name</label>
       <input id="q" type="text" class="form-control" placeholder="Search by name…" aria-label="Search tribes by name">
     </div>
 
     <div>
-      <label class="visually-hidden" for="sort">Sort tribes</label>
+      <label class="sr-only" for="sort">Sort tribes</label>
       <select id="sort" name="sort" class="form-select" aria-label="Sort tribes">
-        <option value="name_asc">Sort: Name (A→Z)</option>
-        <option value="name_desc">Sort: Name (Z→A)</option>
-        <option value="established_desc">Sort: Established (newest)</option>
-        <option value="established_asc">Sort: Established (oldest)</option>
+        <option value="name_asc">Name (A→Z)</option>
+        <option value="name_desc">Name (Z→A)</option>
+        <option value="established_desc">Established (newest)</option>
+        <option value="established_asc">Established (oldest)</option>
       </select>
     </div>
 
@@ -41,7 +27,7 @@
     <span id="status" class="text-muted" role="status" aria-live="polite"></span>
   </div>
 
-  <ul id="list" class="item-list"><li class="muted">Loading…</li></ul>
+  <ul id="list" class="item-list"><li class="text-muted">Loading…</li></ul>
 </section>
 {% endblock %}
 
@@ -53,12 +39,12 @@
   async function load(){
     const list = document.getElementById('list');
     const status = document.getElementById('status');
-    list.innerHTML = '<li class="muted">Loading…</li>';
-    if (status) status.textContent = '';
+    list.innerHTML = '<li class="text-muted">Loading…</li>';
+    status.textContent = '';
 
     try {
-      const q = (document.getElementById('q')?.value || '').trim();
-      const sort = document.getElementById('sort')?.value || 'name_asc';
+      const q = document.getElementById('q').value.trim();
+      const sort = document.getElementById('sort').value;
 
       const params = new URLSearchParams();
       if (q) params.set('q', q);
@@ -70,7 +56,7 @@
       TRIBES = await r.json();
 
       render();
-      if (status) status.textContent = `${TRIBES.length} tribe${TRIBES.length===1?'':'s'} found`;
+      status.textContent = `${TRIBES.length} tribe${TRIBES.length===1?'':'s'} found`;
     } catch (e) {
       list.innerHTML = `<li class="text-danger">Error: ${e.message}</li>`;
     }
@@ -79,7 +65,7 @@
   function render(){
     const list = document.getElementById('list');
     if (!Array.isArray(TRIBES) || TRIBES.length === 0) {
-      list.innerHTML = '<li class="muted">No tribes found.</li>';
+      list.innerHTML = '<li class="text-muted">No tribes found.</li>';
       return;
     }
 
@@ -90,21 +76,20 @@
         </a>
         ${t.description ? `<div class="item-desc">${t.description}</div>` : ``}
         <div class="badges">
-          ${t.recognition_type ? `<span class="badge">${fmt(t.recognition_type)}</span>` : ``}
-          ${t.established_year ? `<span class="badge">Est. ${t.established_year}</span>` : ``}
+          ${t.recognition_type ? `<span class="badge-chip">${fmt(t.recognition_type)}</span>` : ``}
+          ${t.established_year ? `<span class="badge-chip">Est. ${t.established_year}</span>` : ``}
         </div>
       </li>
     `).join('');
   }
 
-  document.getElementById('q')?.addEventListener('input', load);
-  document.getElementById('sort')?.addEventListener('change', load);
-  document.getElementById('clear')?.addEventListener('click', () => {
-    const q = document.getElementById('q'); if (q) q.value = '';
+  document.getElementById('q').addEventListener('input', load);
+  document.getElementById('sort').addEventListener('change', load);
+  document.getElementById('clear').addEventListener('click', () => {
+    document.getElementById('q').value = '';
     load();
   });
 
   load();
 </script>
 {% endblock %}
-{# html-validate-disable-next non-document-content-after-html #}

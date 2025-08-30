@@ -1,30 +1,14 @@
-{# html-validate-disable-next non-document-content-before-doctype #}
 {%- extends "layout.html" -%}
 
 {% block title %}Share Event Photos{% endblock %}
-
 {% block content %}
-<style>
-  .muted { color:#666 }
-  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap:12px; }
-  .card { background:#fafafa; padding:8px; border:1px solid #eee; border-radius:8px; }
-  .sr-only {
-    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
-    overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
-  }
-</style>
 
 <a href="/tribes-html" class="muted">← Back</a>
 <h1>Share Photos</h1>
-<p class="muted">
-  Upload event photos. Choose visibility:
-  <b>Public</b>, <b>Tribal-only</b>, or <b>City-only</b>.
-</p>
+<p class="muted">Upload event photos. Choose visibility: <b>Public</b>, <b>Tribal-only</b>, or <b>City-only</b>.</p>
 
 <form id="up" enctype="multipart/form-data" aria-describedby="form-help">
-  <p id="form-help" class="sr-only">
-    Upload a photo, optionally add a caption and your name, then choose who can see it.
-  </p>
+  <p id="form-help" class="sr-only">Upload a photo, optionally add a caption and your name, then choose who can see it.</p>
 
   <div class="mb-2">
     <label for="fileInput">Photo file</label>
@@ -50,12 +34,13 @@
     </select>
   </div>
 
-  <button type="submit">Upload</button>
-  <span id="msg" class="muted" role="status" aria-live="polite"></span>
+  <button type="submit" class="btn btn-primary">Upload</button>
+  <span id="msg" class="muted text-small" role="status" aria-live="polite"></span>
 </form>
 
-<h3>Gallery</h3>
+<h3 class="mt-1">Gallery</h3>
 <div id="gallery" class="grid"></div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -65,12 +50,11 @@
   async function loadGallery(){
     const r = await fetch(`/api/core/events/${eventId}/media`);
     const list = r.ok ? await r.json() : [];
-    document.getElementById('gallery').innerHTML = list.map(m => `
-      <div class="card">
-        <img src="${m.file_path}" alt="${(m.caption || 'Event photo').replace(/"/g,'&quot;')}"
-             style="width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:6px">
-        ${m.caption ? `<div>${m.caption}</div>`:''}
-        <div class="muted" style="font-size:.9rem">${m.visibility}${m.uploader_name ? ` • ${m.uploader_name}`:''}</div>
+    document.getElementById('gallery').innerHTML = (list || []).map(m => `
+      <div class="card-media">
+        <img src="${m.file_path}" alt="${(m.caption || 'Event photo').replace(/"/g,'&quot;')}" class="img-cover">
+        ${m.caption ? `<div class="mt-1">${m.caption}</div>`:''}
+        <div class="muted text-small">${m.visibility}${m.uploader_name ? ` • ${m.uploader_name}`:''}</div>
       </div>
     `).join('') || '<em class="muted">No photos yet</em>';
   }

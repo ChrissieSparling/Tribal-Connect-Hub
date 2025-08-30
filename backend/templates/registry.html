@@ -1,0 +1,27 @@
+{%- extends "layout.html" -%}
+{% block title %}Native-Owned Business Registry • TribalConnect{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h1 class="mb-3">Native-Owned Business Registry &amp; TERO Hub</h1>
+
+  {% if categories and categories|length %}
+    <div class="row">
+      {% for c in categories %}
+        <div class="col-md-6 mb-3">
+          <div class="card h-100">
+            <div class="card-body">
+              <h3 class="card-title">
+                <a href="/c/{{ c.slug }}">{{ c.name }}</a>
+              </h3>
+              <p class="card-text">{{ c.description }}</p>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-muted">No categories yet. Check back soon.</p>
+  {% endif %}
+</div>
+{% endblock %}
