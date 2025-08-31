@@ -35,6 +35,7 @@ from tribal_core import router as core_router, register_events as core_register,
 # from .models import User  # <- switch duplicate and merge into .tribal_core.py
 from tribal_core import User
 
+from pydantic import BaseModel  # after FastAPI to avoid confusion
 # ---------------------- FIXED CONTEXT MANAGER ----------------------
 # @contextmanager
 # def db_session() -> Generator[SASession, None, None]:
@@ -49,7 +50,6 @@ from tribal_core import User
 #             next(gen)
 # # ------------------------------------------------------------------
 
-# ----- Paths (absolute = fewer surprises)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
@@ -92,7 +92,7 @@ core_register(app)
 
 
 # ---------- Pydantic view models for in-memory demo endpoints ----------
-from pydantic import BaseModel  # after FastAPI to avoid confusion
+
 
 class Tribe(BaseModel):
     id: int
