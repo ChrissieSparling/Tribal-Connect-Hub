@@ -5,7 +5,7 @@ TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "templates"
 DIRECTIVE = '{# html-validate-disable-next non-document-content-before-doctype #}'
 EXTENDS_PREFIX = "{% extends"
 EXTENDS_PREFIX_TRIMMED = "{%- extends"
-LAYOUT_NAMES = {"layout.html", "base.html"}  # add any other full-document bases here
+LAYOUT_NAMES = {"layout.html",{%- extends "layout.html" -%}.html"}  # add any other full-document bases here
 
 def clean_file(p: Path) -> bool:
     raw = p.read_bytes()
