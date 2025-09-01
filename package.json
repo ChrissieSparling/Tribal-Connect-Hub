@@ -1,5 +1,5 @@
 {
-  "name": "tribal-connect",
+  "name": "tribal-connect-hub",
   "version": "1.0.0",
   "scripts": {
     "lint": "stylelint '**/*.css'"

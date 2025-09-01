@@ -1,0 +1,21 @@
+{
+  "elements": ["html5"],
+  "extends": ["html-validate:recommended"],
+  "rules": {
+    "non-document-content-before-doctype": "error"
+  },
+  "ignores": [
+    "backend/templates/business.html",
+    "backend/templates/home.html",
+    "backend/templates/signup.html",
+    "backend/templates/login.html",
+    "backend/templates/admin_membership.html",
+    "backend/templates/tribe_list.html",
+    "backend/templates/tribes_admin.html",
+    "backend/templates/category.html",
+    "backend/templates/subcategory.html",
+    "backend/templates/event_share.html",
+    "backend/templates/welcome.html",
+    "backend/templates/registry.html"
+  ]
+}

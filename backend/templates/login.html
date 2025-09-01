@@ -1,15 +1,48 @@
-{# html-validate-disable-next non-document-content-before-doctype #}
-{%- extends "layout.html" -%}
+{%- extends "layout.html" %}
 {% block title %}Login — TribalConnect{% endblock %}
 
 {% block head_extra %}
 <style>
-  .auth-card { max-width: 480px; margin: 2rem auto; padding: 1.25rem; border: 1px solid #eee; border-radius: 12px; background: #fff; }
-  .auth-card h1 { margin: 0 0 .75rem; }
-  .auth-card label { display:block; margin-top:.5rem; font-weight:600; }
-  .auth-card input { width:100%; padding:.5rem; border:1px solid #ccc; border-radius:.4rem; }
-  .auth-card button { margin-top: .9rem; padding:.6rem 1rem; border:0; border-radius:.5rem; background:#111; color:#fff; cursor:pointer; }
-  .muted { color:#666; font-size:.9rem; }
+  .auth-card {
+    max-width: 480px;
+    margin: 2rem auto;
+    padding: 1.25rem;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    background: #fff;
+  }
+
+  .auth-card h1 {
+    margin: 0 0 .75rem;
+  }
+
+  .auth-card label {
+    display: block;
+    margin-top: .5rem;
+    font-weight: 600;
+  }
+
+  .auth-card input {
+    width: 100%;
+    padding: .5rem;
+    border: 1px solid #ccc;
+    border-radius: .4rem;
+  }
+
+  .auth-card button {
+    margin-top: .9rem;
+    padding: .6rem 1rem;
+    border: 0;
+    border-radius: .5rem;
+    background: #111;
+    color: #fff;
+    cursor: pointer;
+  }
+
+  .muted {
+    color: #666;
+    font-size: .9rem;
+  }
 </style>
 {% endblock %}
 
@@ -19,7 +52,7 @@
   <p class="muted">Welcome back. Enter your email to continue.</p>
 
   {% if error %}
-    <p class="muted" style="color:#b00020; margin-top:.75rem;">{{ error }}</p>
+  <p class="muted" style="color:#b00020; margin-top:.75rem;">{{ error }}</p>
   {% endif %}
 
   <form action="/login" method="post" novalidate>
@@ -27,7 +60,8 @@
     <input id="email" name="email" type="email" placeholder="you@example.org" required autocomplete="email">
 
     <label for="password">Password</label>
-    <input id="password" name="password" type="password" placeholder="••••••••" required autocomplete="current-password">
+    <input id="password" name="password" type="password" placeholder="••••••••" required
+      autocomplete="current-password">
 
     <button type="submit">Sign in</button>
   </form>
@@ -38,4 +72,3 @@
   </p>
 </div>
 {% endblock %}
-

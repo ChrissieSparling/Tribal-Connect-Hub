@@ -2,10 +2,10 @@ import os
 from pathlib import Path
 
 TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "templates"
-DIRECTIVE = '{# html-validate-disable-next non-document-content-before-doctype #}'
+DIRECTIVE = ""  # don't inject a Jinja comment at the top
 EXTENDS_PREFIX = "{% extends"
 EXTENDS_PREFIX_TRIMMED = "{%- extends"
-LAYOUT_NAMES = {"layout.html",{%- extends "layout.html" -%}.html"}  # add any other full-document bases here
+LAYOUT_NAMES = {"layout.html"}
 
 def clean_file(p: Path) -> bool:
     raw = p.read_bytes()
@@ -55,7 +55,9 @@ def clean_file(p: Path) -> bool:
         extends_line = first_line.replace(EXTENDS_PREFIX, EXTENDS_PREFIX_TRIMMED, 1)
 
     # Build new header: directive + extends line, with no blank line between
-    new_top = f"{DIRECTIVE}\n{extends_line}\n"
+    # Build new header: just the extends line, with no blank line before
+    new_top = f"{extends_line}\n"
+
     # Remove any leading whitespace/comments/blank lines before extends
     # (We’re discarding `before` entirely)
     new_text = new_top + remainder.lstrip("\n")
