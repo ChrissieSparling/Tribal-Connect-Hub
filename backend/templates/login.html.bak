@@ -1,5 +1,6 @@
-{%- extends "layout.html" %}
-{% block title %}Sign Up — TribalConnect{% endblock %}
+{% extends "layout.html" %}
+
+{% block title %}Login — TribalConnect{% endblock %}
 
 {% block head_extra %}
 <style>
@@ -48,31 +49,27 @@
 
 {% block content %}
 <div class="auth-card">
-  <h1>Create account</h1>
+  <h1>Login</h1>
+  <p class="muted">Welcome back. Enter your email to continue.</p>
 
   {% if error %}
   <p class="muted" style="color:#b00020; margin-top:.75rem;">{{ error }}</p>
   {% endif %}
 
-  <form action="/signup" method="post" novalidate>
-    <label for="name">Name</label>
-    <input id="name" name="name" type="text" required title="Enter your name" placeholder="Name"
-      value="{{ name or '' }}" autocomplete="name">
-
+  <form action="/login" method="post" novalidate>
     <label for="email">Email</label>
-    <input id="email" name="email" type="email" required title="Enter your email address" placeholder="Email"
-      value="{{ email or '' }}" autocomplete="email">
+    <input id="email" name="email" type="email" placeholder="you@example.org" required autocomplete="email">
 
     <label for="password">Password</label>
-    <input id="password" name="password" type="password" required
-      title="8+ chars with upper, lower, number, and special" placeholder="Password" autocomplete="new-password"
-      pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$">
-    <button type="submit">Create account</button>
+    <input id="password" name="password" type="password" placeholder="••••••••" required
+      autocomplete="current-password">
+
+    <button type="submit">Sign in</button>
   </form>
 
   <p class="muted" style="margin-top:.75rem;">
-    Already have an account?
-    <a href="{{ request.url_for('login_page') }}">Login</a>
+    Don’t have an account?
+    <a href="{{ request.url_for('signup_form') }}">Create one</a>
   </p>
 </div>
 {% endblock %}

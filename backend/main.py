@@ -75,9 +75,9 @@ app.add_middleware(
 
 # Static + templates
 if os.path.isdir(STATIC_DIR):
-    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+    app.mount("/static", StaticFiles(directory="backend/static"), name="static")
 
-templates = Jinja2Templates(directory=TEMPLATES_DIR)
+templates = Jinja2Templates(directory="backend/templates")
 
 # API routers
 app.include_router(core_router, prefix="/api")  # avoid collisions
@@ -148,9 +148,9 @@ tribes: Dict[int, Tribe] = {
 
 events: List[Event] = [
     Event(id=1, title="First Canoe Landing", description="Welcoming the canoes at the river mouth",
-          date=date(2025, 8, 1), tribe_id=1),
+        date=date(2025, 8, 1), tribe_id=1),
     Event(id=2, title="Fall Gathering", description="Celebration with drumming, stories, and food",
-          date=date(2025, 10, 15), tribe_id=1),
+        date=date(2025, 10, 15), tribe_id=1),
 ]
 
 laws: List[Law] = [
