@@ -1,4 +1,4 @@
-{%- extends "layout.html" %}
+{% extends "layout.html" %}
 {% block content %}
 <div class="container py-4">
   <h2 class="mb-3">{{ subcategory.name }}</h2>
@@ -10,7 +10,7 @@
         <h5 class="mb-1">{{ b.name }}</h5>
         <small>{{ b.city }}{% if b.state %}, {{ b.state }}{% endif %}</small>
       </div>
-      <p class="mb-1">{{ (b.description or '')[:160] }}{% if (b.description or '')|length > 160 %}…{% endif %}</p>
+      <p class="mb-1">{{ (b.description or '')[:160] }}{% if (b.description or '')|length &gt; 160 %}…{% endif %}</p>
     </a>
     {% endfor %}
   </div>

@@ -4,12 +4,15 @@ from __future__ import annotations
 import os
 import secrets
 import traceback
+import qrcode
+import io
+from pathlib import Path
 from datetime import date
 from typing import Dict, List, Generator
 from contextlib import contextmanager, suppress
 
 from fastapi import FastAPI, Request, Form, Depends, status, HTTPException, APIRouter
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,21 +22,26 @@ from sqlalchemy.orm import Session as SASession
 from sqlalchemy.exc import IntegrityError
 
 # 🔐 Auth helpers
-from common.auth import safe_verify_password   # , validate_password, hash_password
+from backend.common.auth import safe_verify_password, validate_password, hash_password #  validate_password, hash_password
 
-# Routers & Core DB/session
-from tenants import router as tenants_router
-from approvals import router as approvals_router
-from audit import router as audit_router
-from app.api.routes import health
+# ---- Routers (align to your tree)
+from backend.tenants.router import router as tenants_router
+from backend.approvals.router import router as approvals_router
+from backend.audit.router import router as audit_router
+from backend.native_registry.router import router as native_registry_router
 
+# health route that lives under backend/app/api/routes/health.py
+from backend.app.api.routes import health as health_routes
 
-# Use the single source of truth for DB from tribal_core
-from tribal_core import router as core_router, register_events as core_register, get_db as core_get_db
+from backend.tribal_core import (
+    router as core_router,
+    register_events as core_register,
+    get_db as core_get_db, User
+)
 
 # Your ORM User (from your SQLAlchemy models package; if it's the one in tribal_core, import from there)
 # from .models import User  # <- switch duplicate and merge into .tribal_core.py
-from tribal_core import User
+# from tribal_core import User
 
 from pydantic import BaseModel  # after FastAPI to avoid confusion
 # ---------------------- FIXED CONTEXT MANAGER ----------------------
@@ -50,11 +58,18 @@ from pydantic import BaseModel  # after FastAPI to avoid confusion
 #             next(gen)
 # # ------------------------------------------------------------------
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-STATIC_DIR = os.path.join(BASE_DIR, "static")
-TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
+# BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# STATIC_DIR = os.path.join(BASE_DIR, "static")
+# TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 
-app = FastAPI(title="Tribal Connect Hub")
+# ---- Paths
+BASE_DIR = Path(__file__).resolve().parent
+TEMPLATES_DIR = BASE_DIR / "templates"
+STATIC_DIR = BASE_DIR / "static"
+
+
+# ---- App
+app = FastAPI(title="Tribal Connect Hub", version="0.1.0")
 
 # Sessions
 app.add_middleware(
@@ -74,17 +89,23 @@ app.add_middleware(
 )
 
 # Static + templates
-if os.path.isdir(STATIC_DIR):
-    app.mount("/static", StaticFiles(directory="backend/static"), name="static")
+# if os.path.isdir(STATIC_DIR):
+#     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
-templates = Jinja2Templates(directory="backend/templates")
+# templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+
+# ---- Static & Templates
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 # API routers
-app.include_router(core_router, prefix="/api")  # avoid collisions
-app.include_router(tenants_router)
-app.include_router(approvals_router)
-app.include_router(audit_router)
-app.include_router(health.router)
+# ---- Include routers
+app.include_router(core_router, prefix="/core")
+app.include_router(tenants_router, prefix="/tenants")
+app.include_router(approvals_router, prefix="/approvals")
+app.include_router(audit_router, prefix="/audit")
+app.include_router(native_registry_router, prefix="/native-registry")
+app.include_router(health_routes.router, prefix="/health")
 
 # DB/table creation + seeding at startup (from core)
 core_register(app)
@@ -341,7 +362,7 @@ async def signup(
         #     return templates.TemplateResponse(...)
 
         # hashed_pw = hash_password(password)  # uncomment if available
-        hashed_pw = password  # TEMP: replace when you wire hash_password
+        hashed_pw = hash_password(password)
         user = User(username=name, email=email, password=hashed_pw)
         db.add(user)
         db.commit()
@@ -424,3 +445,11 @@ async def admin_deny_membership(request: Request, user_id: int, db: SASession = 
     u.is_verified = False
     db.commit()
     return RedirectResponse(url="/admin/memberships", status_code=303)
+
+@app.get("/qrcode")
+def get_qr(data: str = "Hello TribalConnect"):
+    qr = qrcode.make(data)
+    buf = io.BytesIO()
+    qr.save(buf, format="PNG")
+    buf.seek(0)
+    return StreamingResponse(buf, media_type="image/png")

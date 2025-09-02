@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Dict, Optional
+from .router import router
 
 router = APIRouter(prefix="/approvals", tags=["approvals"])
 

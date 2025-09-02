@@ -28,3 +28,6 @@ fastapi
 uvicorn
 sqlalchemy
 qrcode[pil]
+itsdangerous
+alembic           # if you do DB migrations
+passlib[bcrypt]   # if you do password hashing

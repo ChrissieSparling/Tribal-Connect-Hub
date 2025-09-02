@@ -1,57 +1,12 @@
-{%- extends "layout.html" %}
+{% extends "layout.html" %}
 {% block title %}Sign Up — TribalConnect{% endblock %}
 
-{% block head_extra %}
-<style>
-  .auth-card {
-    max-width: 480px;
-    margin: 2rem auto;
-    padding: 1.25rem;
-    border: 1px solid #eee;
-    border-radius: 12px;
-    background: #fff;
-  }
-
-  .auth-card h1 {
-    margin: 0 0 .75rem;
-  }
-
-  .auth-card label {
-    display: block;
-    margin-top: .5rem;
-    font-weight: 600;
-  }
-
-  .auth-card input {
-    width: 100%;
-    padding: .5rem;
-    border: 1px solid #ccc;
-    border-radius: .4rem;
-  }
-
-  .auth-card button {
-    margin-top: .9rem;
-    padding: .6rem 1rem;
-    border: 0;
-    border-radius: .5rem;
-    background: #111;
-    color: #fff;
-    cursor: pointer;
-  }
-
-  .muted {
-    color: #666;
-    font-size: .9rem;
-  }
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="auth-card">
+<div class="auth-card maxw-480 mt-2rem mx-auto">
   <h1>Create account</h1>
 
   {% if error %}
-  <p class="muted" style="color:#b00020; margin-top:.75rem;">{{ error }}</p>
+  <p class="muted text-danger mt-3">{{ error }}</p>
   {% endif %}
 
   <form action="/signup" method="post" novalidate>
@@ -70,7 +25,7 @@
     <button type="submit">Create account</button>
   </form>
 
-  <p class="muted" style="margin-top:.75rem;">
+  <p class="muted mt-3">
     Already have an account?
     <a href="{{ request.url_for('login_page') }}">Login</a>
   </p>
