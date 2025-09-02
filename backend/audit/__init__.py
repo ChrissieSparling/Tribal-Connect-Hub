@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from typing import Dict
 import hashlib, time
+from .router import router
 
 router = APIRouter(prefix="/audit", tags=["audit"])
 

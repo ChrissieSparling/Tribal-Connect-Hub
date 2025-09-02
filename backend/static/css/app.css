@@ -12,6 +12,46 @@
     overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
 }
 
+/* auth forms */
+.auth-card {
+    padding: 1.25rem;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.auth-card h1 {
+    margin: 0 0 .75rem;
+}
+
+.auth-card label {
+    display: block;
+    margin-top: .5rem;
+    font-weight: 600;
+}
+
+.auth-card input {
+    width: 100%;
+    padding: .5rem;
+    border: 1px solid #ccc;
+    border-radius: .4rem;
+}
+
+.auth-card button {
+    margin-top: .9rem;
+    padding: .6rem 1rem;
+    border: 0;
+    border-radius: .5rem;
+    background: #111;
+    color: #fff;
+    cursor: pointer;
+}
+
+/* width helpers */
+.maxw-480 { max-width: 480px; }
+.maxw-640 { max-width: 640px; }
+
+
 /* general utilities */
 .maxw-840 { max-width: 840px; }
 .mt-2rem { margin-top: 2rem; }
@@ -106,10 +146,10 @@
 
 /* optional: if you’re using “glass” anywhere */
 .glass {
-  background: rgb(255 255 255 / 8%); /* 8% opacity */
+    background: rgb(255 255 255 / 8%); /* 8% opacity */
 /* stylelint-disable-next-line property-no-vendor-prefix */
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-  border: 1px solid rgb(255 255 255 / 15%);
-  border-radius: .75rem;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgb(255 255 255 / 15%);
+    border-radius: .75rem;
 }

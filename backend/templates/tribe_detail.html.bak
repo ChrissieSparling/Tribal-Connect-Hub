@@ -3,7 +3,8 @@
 {% block title %}Tribe Details{% endblock %}
 
 {% block head_extra %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path=
+'css/styles.css') }}">
 <style>
   .meta {
     color: #444;

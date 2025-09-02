@@ -13,6 +13,7 @@ Notes:
 from __future__ import annotations
 from datetime import datetime
 from enum import Enum
+from pathlib import Path
 from typing import Optional, List
 
 from fastapi import FastAPI, Depends, HTTPException, Query, Form
@@ -261,10 +262,13 @@ class BusinessOut(BaseModel):
 
 
 # -----------------------------------------------------------------------------
-# App & Templates
+# App & static [paths and] Templates
 # -----------------------------------------------------------------------------
 app = FastAPI(title="Native Business Registry & TERO Hub")
-app.mount("/static", StaticFiles(directory="static"), name="static")
+
+static_path = Path(__file__).resolve().parent.parent / "static"
+if static_path.exists():
+    app.mount("/static", StaticFiles(directory=static_path), name="static")
 templates = Jinja2Templates(directory="templates")
 
 
