@@ -5,7 +5,7 @@ BACKEND = os.path.abspath(os.path.join(HERE, ".."))
 if BACKEND not in sys.path:
     sys.path.insert(0, BACKEND)
 
-from common.auth import hash_password, safe_verify_password
+from app.common.auth import hash_password, safe_verify_password
 
 
 def test_hash_and_verify_password():

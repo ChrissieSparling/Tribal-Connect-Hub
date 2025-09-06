@@ -9,7 +9,7 @@ import pytest
 
 # Modules we expect to import without side effects
 MODULES = [
-    "common.auth",
+    "app.common.auth",
     "tenants",
     "approvals",
     "audit",

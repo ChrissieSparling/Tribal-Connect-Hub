@@ -1,0 +1,19 @@
+
+{% extends 'layout.html' %}
+{% block content %}
+<div class="container py-4">
+  <h1 class="mb-3">Native-Owned Business Registry & TERO Hub</h1>
+  <div class="row">
+    {% for c in categories %}
+      <div class="col-md-6 mb-3">
+        <div class="card h-100">
+          <div class="card-body">
+            <h3 class="card-title"><a href="/c/{{ c.slug }}">{{ c.name }}</a></h3>
+            <p class="card-text">{{ c.description }}</p>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -22,7 +22,7 @@ from sqlalchemy.orm import Session as SASession
 from sqlalchemy.exc import IntegrityError
 
 # 🔐 Auth helpers
-from backend.common.auth import safe_verify_password, validate_password, hash_password #  validate_password, hash_password
+from app.common.auth import hash_password, safe_verify_password, validate_password
 
 # ---- Routers (align to your tree)
 from backend.tenants.router import router as tenants_router
@@ -345,23 +345,27 @@ async def signup(
     password: str = Form(...),
     db: SASession = Depends(core_get_db),
 ):
-    # Server-side password enforcement (uncomment if validate_password exists)
-    # if not validate_password(password):
-    #     return templates.TemplateResponse(
-    #         "signup.html",
-    #         {"request": request,
-    #          "error": "Password must be 8+ chars and include uppercase, lowercase, number, and special character.",
-    #          "name": name, "email": email},
-    #         status_code=400
-    #     )
-
+   # Server-side password enforcement
+    if not validate_password(password):
+        return templates.TemplateResponse(
+            "signup.html",
+            {
+                "request": request,
+                "error": (
+                    "Password must be 8+ chars and include uppercase, "
+                    "lowercase, number, and special character."
+                ),
+                "name": name,
+                "email": email,
+            },
+            status_code=400,
+        )
     try:
         # Optional duplicate check…
         # existing = db.query(User).filter(User.email == email).first()
         # if existing:
         #     return templates.TemplateResponse(...)
 
-        # hashed_pw = hash_password(password)  # uncomment if available
         hashed_pw = hash_password(password)
         user = User(username=name, email=email, password=hashed_pw)
         db.add(user)

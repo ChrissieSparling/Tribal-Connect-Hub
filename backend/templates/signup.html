@@ -18,6 +18,7 @@
     <input id="email" name="email" type="email" required title="Enter your email address" placeholder="Email"
       value="{{ email or '' }}" autocomplete="email">
 
+    {% set hashed_pw = hash_password(password) %}
     <label for="password">Password</label>
     <input id="password" name="password" type="password" required
       title="8+ chars with upper, lower, number, and special" placeholder="Password" autocomplete="new-password"
