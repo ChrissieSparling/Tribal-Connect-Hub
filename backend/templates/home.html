@@ -9,13 +9,7 @@
     overflow: hidden;
     min-height: 420px;
     background: linear-gradient(to bottom right, rgba(0, 0, 0, .55), rgba(0, 0, 0, .35)),
-    url("{{ url_for('static', path=
-'image/tribalconnect-banner.jpg')
-  }
-  }
-
-  ") center/cover no-repeat #0e1a1f;
-
+    url("{{ url_for('static', path='img/tribalconnect-banner.png') }}") center/cover no-repeat #0e1a1f;
   }
 
   .hero__inner {
@@ -63,6 +57,7 @@
     background: rgba(255, 255, 255, .08);
     border: 1px solid rgba(255, 255, 255, .18);
     box-shadow: 0 8px 28px rgba(0, 0, 0, .25);
+    /* stylelint-disable-next-line property-no-vendor-prefix */
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     border-radius: 16px;
@@ -90,13 +85,16 @@
     opacity: .85;
     font-size: .95rem;
   }
+
+  .container--narrow {
+    max-width: 840px;
+    margin-top: 2rem;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="py-4">
-
-  <!-- HERO -->
   <section class="hero" role="region" aria-labelledby="hero-title">
     <div class="hero__inner text-light">
       <div class="container">
@@ -108,15 +106,12 @@
         </p>
 
         <div class="cta-row">
-          <a class="btn btn-success btn-hero" href="/tribes-html">
-            Explore Tribes&nbsp; ›
-          </a>
+          <a class="btn btn-success btn-hero" href="/tribes-html">Explore Tribes&nbsp; ›</a>
           <a class="btn btn-outline-light btn-hero" href="/login">Login</a>
           <a class="btn btn-primary btn-hero" href="/signup">Join Community</a>
         </div>
 
-        <!-- Upcoming "glass" card -->
-        <div class="container maxw-840 mt-2rem">
+        <div class="container container--narrow">
           <div class="glass text-light p-3 p-md-4">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <h2 class="h5 m-0">Upcoming Events</h2>
@@ -140,7 +135,6 @@
 
 {% block scripts %}
 <script>
-  // Simple upcoming list: pull events for a couple of known tribes (adjust as you grow)
   async function fetchEventsFor(tribeId) {
     try {
       const r = await fetch(`/tribes/${tribeId}/events`);
@@ -169,8 +163,8 @@
 
   (async function loadUpcoming() {
     const box = document.getElementById('events');
-    const a = await fetchEventsFor(1); // Snoqualmie (demo)
-    const b = await fetchEventsFor(2); // Tulalip (demo)
+    const a = await fetchEventsFor(1);
+    const b = await fetchEventsFor(2);
     const all = [...a, ...b];
 
     if (!all.length) {
@@ -178,7 +172,6 @@
       return;
     }
 
-    // Sort by start_date ascending if present
     all.sort((x, y) => new Date(x.start_date || x.date) - new Date(y.start_date || y.date));
 
     box.innerHTML = all.slice(0, 4).map(e => `
@@ -187,7 +180,6 @@
         <div class="event-meta">
           ${fmtDateRange(e.start_date || e.date, e.end_date)}
           ${e.location ? ` • ${e.location}` : ''}
-          ${e.tribe_id ? '' : ''}
         </div>
       </div>
     `).join('');
