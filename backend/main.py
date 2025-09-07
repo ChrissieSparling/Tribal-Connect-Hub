@@ -28,10 +28,6 @@ from backend.app.common.auth import hash_password, safe_verify_password, validat
 # ---- Routers (align to your tree)
 from backend.app.api import api_router
 
-
-# health route that lives under backend/app/api/routes/health.py
-from backend.app.api.routes import health as health_routes
-
 from backend.tribal_core import (
     # router as core_router,
     register_events as core_register,
@@ -99,13 +95,7 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 # API routers
-# ---- Include routers
-# app.include_router(core_router, prefix="/core")
-# app.include_router(tenants_router, prefix="/tenants")
-# app.include_router(approvals_router, prefix="/approvals")
-# app.include_router(audit_router, prefix="/audit")
-# app.include_router(native_registry_router, prefix="/native-registry")
-# app.include_router(health_routes.router, prefix="/health")
+app.include_router(api_router)
 
 # DB/table creation + seeding at startup (from core)
 core_register(app)
