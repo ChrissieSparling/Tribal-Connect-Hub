@@ -11,32 +11,32 @@ from datetime import date
 from typing import Dict, List, Generator
 from contextlib import contextmanager, suppress
 
-from fastapi import FastAPI, Request, Form, Depends, status, HTTPException, APIRouter
-from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
+from fastapi import FastAPI, Request, Form, Depends, status, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
+from fastapi.responses import RedirectResponse, HTMLResponse, StreamingResponse
 
 from sqlalchemy.orm import Session as SASession
 from sqlalchemy.exc import IntegrityError
 
 # 🔐 Auth helpers
-from app.common.auth import hash_password, safe_verify_password, validate_password
+# from app.common.auth import hash_password, safe_verify_password, validate_password
+from backend.app.common.auth import hash_password, safe_verify_password, validate_password
 
 # ---- Routers (align to your tree)
-from backend.tenants.router import router as tenants_router
-from backend.approvals.router import router as approvals_router
-from backend.audit.router import router as audit_router
-from backend.native_registry.router import router as native_registry_router
+from backend.app.api import api_router
+
 
 # health route that lives under backend/app/api/routes/health.py
 from backend.app.api.routes import health as health_routes
 
 from backend.tribal_core import (
-    router as core_router,
+    # router as core_router,
     register_events as core_register,
-    get_db as core_get_db, User
+    get_db as core_get_db,
+    User
 )
 
 # Your ORM User (from your SQLAlchemy models package; if it's the one in tribal_core, import from there)
@@ -100,12 +100,12 @@ templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 # API routers
 # ---- Include routers
-app.include_router(core_router, prefix="/core")
-app.include_router(tenants_router, prefix="/tenants")
-app.include_router(approvals_router, prefix="/approvals")
-app.include_router(audit_router, prefix="/audit")
-app.include_router(native_registry_router, prefix="/native-registry")
-app.include_router(health_routes.router, prefix="/health")
+# app.include_router(core_router, prefix="/core")
+# app.include_router(tenants_router, prefix="/tenants")
+# app.include_router(approvals_router, prefix="/approvals")
+# app.include_router(audit_router, prefix="/audit")
+# app.include_router(native_registry_router, prefix="/native-registry")
+# app.include_router(health_routes.router, prefix="/health")
 
 # DB/table creation + seeding at startup (from core)
 core_register(app)
@@ -345,7 +345,7 @@ async def signup(
     password: str = Form(...),
     db: SASession = Depends(core_get_db),
 ):
-   # Server-side password enforcement
+# Server-side password enforcement
     if not validate_password(password):
         return templates.TemplateResponse(
             "signup.html",
