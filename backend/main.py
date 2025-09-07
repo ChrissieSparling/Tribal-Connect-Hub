@@ -23,20 +23,21 @@ from sqlalchemy.exc import IntegrityError
 
 # 🔐 Auth helpers
 # from app.common.auth import hash_password, safe_verify_password, validate_password
-from backend.app.common.auth import hash_password, safe_verify_password, validate_password
+from backend.app.common.auth import (
+    hash_password,
+    safe_verify_password,
+    validate_password,
+)
 
 # ---- Routers (align to your tree)
 from backend.app.api import api_router
 
 
-# health route that lives under backend/app/api/routes/health.py
-from backend.app.api.routes import health as health_routes
-
 from backend.tribal_core import (
     # router as core_router,
     register_events as core_register,
     get_db as core_get_db,
-    User
+    User,
 )
 
 # Your ORM User (from your SQLAlchemy models package; if it's the one in tribal_core, import from there)
@@ -44,6 +45,7 @@ from backend.tribal_core import (
 # from tribal_core import User
 
 from pydantic import BaseModel  # after FastAPI to avoid confusion
+
 # ---------------------- FIXED CONTEXT MANAGER ----------------------
 # @contextmanager
 # def db_session() -> Generator[SASession, None, None]:
@@ -70,6 +72,7 @@ STATIC_DIR = BASE_DIR / "static"
 
 # ---- App
 app = FastAPI(title="Tribal Connect Hub", version="0.1.0")
+app.include_router(api_router)
 
 # Sessions
 app.add_middleware(
@@ -98,18 +101,8 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
-# API routers
-# ---- Include routers
-# app.include_router(core_router, prefix="/core")
-# app.include_router(tenants_router, prefix="/tenants")
-# app.include_router(approvals_router, prefix="/approvals")
-# app.include_router(audit_router, prefix="/audit")
-# app.include_router(native_registry_router, prefix="/native-registry")
-# app.include_router(health_routes.router, prefix="/health")
-
 # DB/table creation + seeding at startup (from core)
 core_register(app)
-
 
 
 # ---------- Pydantic view models for in-memory demo endpoints ----------
@@ -121,6 +114,7 @@ class Tribe(BaseModel):
     description: str
     public_sharing: Dict[str, bool]
 
+
 class Event(BaseModel):
     id: int
     title: str
@@ -128,12 +122,14 @@ class Event(BaseModel):
     date: date
     tribe_id: int
 
+
 class Law(BaseModel):
     id: int
     title: str
     summary: str
     date_passed: date
     tribe_id: int
+
 
 class Member(BaseModel):
     id: int
@@ -144,6 +140,7 @@ class Member(BaseModel):
     profile_picture_url: str | None = None
     website_url: str | None = None
     bio: str | None = None
+
 
 # ---------- In-memory demo data ----------
 tribes: Dict[int, Tribe] = {
@@ -168,53 +165,92 @@ tribes: Dict[int, Tribe] = {
 }
 
 events: List[Event] = [
-    Event(id=1, title="First Canoe Landing", description="Welcoming the canoes at the river mouth",
-        date=date(2025, 8, 1), tribe_id=1),
-    Event(id=2, title="Fall Gathering", description="Celebration with drumming, stories, and food",
-        date=date(2025, 10, 15), tribe_id=1),
+    Event(
+        id=1,
+        title="First Canoe Landing",
+        description="Welcoming the canoes at the river mouth",
+        date=date(2025, 8, 1),
+        tribe_id=1,
+    ),
+    Event(
+        id=2,
+        title="Fall Gathering",
+        description="Celebration with drumming, stories, and food",
+        date=date(2025, 10, 15),
+        tribe_id=1,
+    ),
 ]
 
 laws: List[Law] = [
-    Law(id=1, title="Fishing Rights Ordinance",
+    Law(
+        id=1,
+        title="Fishing Rights Ordinance",
         summary="Defines the fishing rights within ancestral waters.",
-        date_passed=date(2020, 5, 10), tribe_id=1),
-    Law(id=2, title="Cultural Site Protection Act",
+        date_passed=date(2020, 5, 10),
+        tribe_id=1,
+    ),
+    Law(
+        id=2,
+        title="Cultural Site Protection Act",
         summary="Protects sacred lands and burial sites from development.",
-        date_passed=date(2021, 9, 1), tribe_id=1),
+        date_passed=date(2021, 9, 1),
+        tribe_id=1,
+    ),
 ]
 
 members: List[Member] = [
     Member(
-        id=1, first_name="Glaysia", last_name="Sparling", role="Youth", tribe_id=1202,
+        id=1,
+        first_name="Glaysia",
+        last_name="Sparling",
+        role="Youth",
+        tribe_id=1202,
         profile_picture_url="https://example.com/images/glaysia.jpg",
         website_url="https://glaysiaspeaks.com",
         bio="Recent graduate passionate about Indigenous health and youth leadership.",
     ),
     Member(
-        id=2, first_name="Sharon", last_name="Frelinger", role="Elder", tribe_id=195,
+        id=2,
+        first_name="Sharon",
+        last_name="Frelinger",
+        role="Elder",
+        tribe_id=195,
         profile_picture_url="https://example.com/images/sharon.jpg",
         website_url="https://sharonfrelinger.com",
         bio="completely awesome.",
     ),
     Member(
-        id=3, first_name="Chrissie", last_name="Sparling", role="Tribal Council", tribe_id=875,
+        id=3,
+        first_name="Chrissie",
+        last_name="Sparling",
+        role="Tribal Council",
+        tribe_id=875,
         profile_picture_url="https://example.com/images/chrissie.jpg",
         website_url="https://chrissiesparling.com",
         bio="happy and in love with life.",
     ),
     Member(
-        id=4, first_name="Aurrick", last_name="Sparling", role="Tribal Member", tribe_id=1203,
+        id=4,
+        first_name="Aurrick",
+        last_name="Sparling",
+        role="Tribal Member",
+        tribe_id=1203,
         profile_picture_url="https://example.com/images/aurrick.jpg",
         website_url="https://aurricksvision.com",
         bio="advocating for those who are still looking to find their way.",
     ),
     Member(
-        id=5, first_name="Joseph", last_name="Willoughby", role="Tribal Member Employee", tribe_id=1203,
+        id=5,
+        first_name="Joseph",
+        last_name="Willoughby",
+        role="Tribal Member Employee",
+        tribe_id=1203,
         profile_picture_url="https://example.com/images/Joseph.jpg",
         website_url="https://joesvision.com",
         bio="advocating for IT.",
     ),
 ]
+
 
 # ---------- Helpers ----------
 def check_permission(tribe_id: int, section: str):
@@ -222,7 +258,11 @@ def check_permission(tribe_id: int, section: str):
     if not tribe:
         raise HTTPException(status_code=404, detail="Tribe not found")
     if not tribe.public_sharing.get(section, False):
-        raise HTTPException(status_code=403, detail=f"This tribe has chosen not to publicly share their {section}.")
+        raise HTTPException(
+            status_code=403,
+            detail=f"This tribe has chosen not to publicly share their {section}.",
+        )
+
 
 def get_current_user(request: Request, db: SASession):
     user_id = request.session.get("user_id")
@@ -230,20 +270,26 @@ def get_current_user(request: Request, db: SASession):
         return None
     return db.query(User).filter(User.id == user_id).first()
 
+
 def require_admin(request: Request, db: SASession):
     user = get_current_user(request, db)
     if not user or user.role not in ("admin", "enrollment"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admins only.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Admins only."
+        )
     return user
+
 
 # ---------- Routes (API / JSON) ----------
 # @app.get("/health")
 # def health():
 #     return {"ok": True}
 
+
 @app.get("/tribes", response_model=List[Tribe])
 def get_all_tribes():
     return list(tribes.values())
+
 
 @app.get("/tribes/{tribe_id}", response_model=Tribe)
 def get_tribe(tribe_id: int):
@@ -252,46 +298,62 @@ def get_tribe(tribe_id: int):
         raise HTTPException(status_code=404, detail="Tribe not found")
     return tribe
 
+
 @app.get("/tribes/{tribe_id}/events", response_model=List[Event])
 def get_tribe_events(tribe_id: int):
     check_permission(tribe_id, "events")
     return [e for e in events if e.tribe_id == tribe_id]
+
 
 @app.get("/tribes/{tribe_id}/laws", response_model=List[Law])
 def get_tribe_laws(tribe_id: int):
     check_permission(tribe_id, "laws")
     return [l for l in laws if l.tribe_id == tribe_id]
 
+
 @app.get("/tribes/{tribe_id}/members", response_model=List[Member])
 def get_tribe_members(tribe_id: int):
     check_permission(tribe_id, "members")
     return [m for m in members if m.tribe_id == tribe_id]
+
 
 # ---------- Routes (HTML / Templates) ----------
 @app.get("/", response_class=HTMLResponse)
 async def home_page(request: Request):
     return templates.TemplateResponse("home.html", {"request": request})
 
+
 @app.get("/tribes-html", response_class=HTMLResponse)
 async def tribe_list_page(request: Request):
     return templates.TemplateResponse("tribe_list.html", {"request": request})
 
+
 @app.get("/tribes-html/{tribe_id}", response_class=HTMLResponse)
 async def tribe_detail_page(request: Request, tribe_id: int):
-    return templates.TemplateResponse("tribe_detail.html", {"request": request, "tribe_id": tribe_id})
+    return templates.TemplateResponse(
+        "tribe_detail.html", {"request": request, "tribe_id": tribe_id}
+    )
+
 
 @app.get("/events-html/{event_id}/share", response_class=HTMLResponse)
 async def event_share_page(request: Request, event_id: int):
-    return templates.TemplateResponse("event_share.html", {"request": request, "event_id": event_id})
+    return templates.TemplateResponse(
+        "event_share.html", {"request": request, "event_id": event_id}
+    )
+
 
 @app.get("/registry", response_class=HTMLResponse)
 async def registry_page(request: Request):
     # If you have categories, pass them here; otherwise an empty list is fine.
-    return templates.TemplateResponse("registry.html", {"request": request, "categories": []})
+    return templates.TemplateResponse(
+        "registry.html", {"request": request, "categories": []}
+    )
+
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
+
 
 @app.post("/login")
 def login(
@@ -303,39 +365,49 @@ def login(
     user = db.query(User).filter(User.email == email).first()
     if not user or not safe_verify_password(password, user.password):
         return templates.TemplateResponse(
-            "login.html", {"request": request, "error": "Invalid email or password."}, status_code=401
+            "login.html",
+            {"request": request, "error": "Invalid email or password."},
+            status_code=401,
         )
     # ✅ set session and redirect (only once)
     request.session["user_id"] = user.id
     return RedirectResponse(url="/welcome", status_code=status.HTTP_303_SEE_OTHER)
+
 
 @app.post("/logout")
 async def logout(request: Request):
     request.session.clear()
     return RedirectResponse(url="/", status_code=303)
 
+
 @app.get("/members", response_class=HTMLResponse)
 async def members_page(request: Request):
     return templates.TemplateResponse("members.html", {"request": request})
+
 
 @app.get("/departments", response_class=HTMLResponse)
 async def departments_page(request: Request):
     return templates.TemplateResponse("departments.html", {"request": request})
 
+
 @app.get("/businesses", response_class=HTMLResponse)
 async def businesses_page(request: Request):
     return templates.TemplateResponse("businesses.html", {"request": request})
+
 
 @app.get("/tribes-admin", response_class=HTMLResponse)
 async def tribes_admin_page(request: Request):
     return templates.TemplateResponse("tribes_admin.html", {"request": request})
 
+
 @app.get("/signup", response_class=HTMLResponse)
 async def signup_form(request: Request):
     return templates.TemplateResponse("signup.html", {"request": request})
 
+
 # If you have validate_password/hash_password, keep; otherwise comment this entire endpoint for now.
 # from .auth import validate_password, hash_password  # uncomment if implemented
+
 
 @app.post("/signup")
 async def signup(
@@ -345,7 +417,7 @@ async def signup(
     password: str = Form(...),
     db: SASession = Depends(core_get_db),
 ):
-# Server-side password enforcement
+    # Server-side password enforcement
     if not validate_password(password):
         return templates.TemplateResponse(
             "signup.html",
@@ -378,7 +450,12 @@ async def signup(
         db.rollback()
         return templates.TemplateResponse(
             "signup.html",
-            {"request": request, "error": "That name or email is already in use.", "name": name, "email": email},
+            {
+                "request": request,
+                "error": "That name or email is already in use.",
+                "name": name,
+                "email": email,
+            },
             status_code=400,
         )
     except Exception as e:
@@ -387,14 +464,23 @@ async def signup(
         traceback.print_exc()
         return templates.TemplateResponse(
             "signup.html",
-            {"request": request, "error": "Something went wrong while creating your account.", "name": name, "email": email},
+            {
+                "request": request,
+                "error": "Something went wrong while creating your account.",
+                "name": name,
+                "email": email,
+            },
             status_code=500,
         )
+
 
 @app.get("/welcome", response_class=HTMLResponse)
 async def welcome_page(request: Request, db: SASession = Depends(core_get_db)):
     current_user = get_current_user(request, db)
-    return templates.TemplateResponse("welcome.html", {"request": request, "current_user": current_user})
+    return templates.TemplateResponse(
+        "welcome.html", {"request": request, "current_user": current_user}
+    )
+
 
 @app.post("/onboarding/tribe")
 async def onboarding_tribe(
@@ -407,7 +493,11 @@ async def onboarding_tribe(
     if not user:
         return templates.TemplateResponse(
             "welcome.html",
-            {"request": request, "error": "Please sign in first.", "current_user": None},
+            {
+                "request": request,
+                "error": "Please sign in first.",
+                "current_user": None,
+            },
             status_code=401,
         )
 
@@ -419,17 +509,32 @@ async def onboarding_tribe(
 
     return templates.TemplateResponse(
         "welcome.html",
-        {"request": request, "current_user": user, "message": "Saved. You’ll see more once your membership is verified."},
+        {
+            "request": request,
+            "current_user": user,
+            "message": "Saved. You’ll see more once your membership is verified.",
+        },
     )
+
 
 @app.get("/admin/memberships", response_class=HTMLResponse)
 async def admin_memberships(request: Request, db: SASession = Depends(core_get_db)):
     require_admin(request, db)
-    pending = db.query(User).filter(User.is_verified == False, User.tribe_id != None).order_by(User.id.asc()).all()
-    return templates.TemplateResponse("admin_memberships.html", {"request": request, "pending": pending})
+    pending = (
+        db.query(User)
+        .filter(User.is_verified == False, User.tribe_id != None)
+        .order_by(User.id.asc())
+        .all()
+    )
+    return templates.TemplateResponse(
+        "admin_memberships.html", {"request": request, "pending": pending}
+    )
+
 
 @app.post("/admin/memberships/{user_id}/approve")
-async def admin_approve_membership(request: Request, user_id: int, db: SASession = Depends(core_get_db)):
+async def admin_approve_membership(
+    request: Request, user_id: int, db: SASession = Depends(core_get_db)
+):
     require_admin(request, db)
     u = db.query(User).filter(User.id == user_id).first()
     if not u:
@@ -438,8 +543,11 @@ async def admin_approve_membership(request: Request, user_id: int, db: SASession
     db.commit()
     return RedirectResponse(url="/admin/memberships", status_code=303)
 
+
 @app.post("/admin/memberships/{user_id}/deny")
-async def admin_deny_membership(request: Request, user_id: int, db: SASession = Depends(core_get_db)):
+async def admin_deny_membership(
+    request: Request, user_id: int, db: SASession = Depends(core_get_db)
+):
     require_admin(request, db)
     u = db.query(User).filter(User.id == user_id).first()
     if not u:
@@ -449,6 +557,7 @@ async def admin_deny_membership(request: Request, user_id: int, db: SASession = 
     u.is_verified = False
     db.commit()
     return RedirectResponse(url="/admin/memberships", status_code=303)
+
 
 @app.get("/qrcode")
 def get_qr(data: str = "Hello TribalConnect"):
