@@ -550,9 +550,16 @@ class PersonNameOut(BaseModel):
 
 
 # ==========================
-# FastAPI router
+# FastAPI routers
 # ==========================
 router = APIRouter(prefix="/core", tags=["core"])
+health_router = APIRouter(tags=["health"])
+
+
+@health_router.get("/health")
+def health() -> dict[str, str]:
+    """Basic service health check."""
+    return {"status": "ok"}
 
 
 # Dependency: DB session per request

@@ -14,7 +14,6 @@ MODULES = [
     "approvals",
     "audit",
     "app.api",
-    "app.api.routes",
     "native_registry.appy",
     "tribal_core",
 ]

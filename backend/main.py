@@ -31,10 +31,6 @@ from backend.app.common.auth import (
 
 # ---- Routers (align to your tree)
 from backend.app.api import api_router
-
-codex/decide-and-finalize-/health-implementation
-
-main
 from backend.tribal_core import (
     # router as core_router,
     register_events as core_register,
@@ -103,12 +99,6 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
-codex/decide-and-finalize-/health-implementation
-# API routers
-app.include_router(api_router)
-
-
-main
 # DB/table creation + seeding at startup (from core)
 core_register(app)
 
@@ -289,9 +279,6 @@ def require_admin(request: Request, db: SASession):
 
 
 # ---------- Routes (API / JSON) ----------
-# @app.get("/health")
-# def health():
-#     return {"ok": True}
 
 
 @app.get("/tribes", response_model=List[Tribe])
