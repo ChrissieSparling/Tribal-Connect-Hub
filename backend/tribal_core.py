@@ -597,11 +597,6 @@ def register_events(app: FastAPI) -> None:
 # --------------------------
 # Routes: Tribes
 # --------------------------
-@router.get("/health")
-def health():
-    return {"ok": True}
-
-
 @router.post("/tribes", response_model=TribeOut)
 def create_tribe(payload: TribeCreate, db: Session = Depends(get_db)):
     if db.query(Tribe).filter(Tribe.name == payload.name).first():
