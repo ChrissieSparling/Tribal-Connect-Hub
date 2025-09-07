@@ -18,7 +18,7 @@
   <form action="/onboarding/tribe" method="post" class="mt-3" novalidate>
     <label for="tribe_id">Your Tribe</label>
     <select id="tribe_id" name="tribe_id" required>
-      <option value="" disabled {% if not current_user or not current_user.tribe_id %}selected{% endif %}>
+      <option value="" disabled {% if not current_user or current_user.tribe_id %}selected{% endif %}>
         Select a tribe</option>
       <option value="1" {% if current_user and current_user.tribe_id == 1 %}selected{% endif %}>Snoqualmie Tribe
       </option>
