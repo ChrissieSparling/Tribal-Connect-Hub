@@ -16,11 +16,11 @@ from enum import Enum
 from pathlib import Path
 from typing import Optional, List
 
-from fastapi import FastAPI, Depends, HTTPException, Query, Form
+from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi import Request
-from pydantic import BaseModel, HttpUrl, Field
+from pydantic import BaseModel, Field
 from sqlalchemy import (
     create_engine, ForeignKey, String, Integer, Text, DateTime, Enum as SAEnum,
     UniqueConstraint, Index, Boolean, Float, CheckConstraint
@@ -28,6 +28,8 @@ from sqlalchemy import (
 from sqlalchemy.orm import (
     DeclarativeBase, Mapped, mapped_column, relationship, Session, sessionmaker
 )
+import re
+import os
 
 # -----------------------------------------------------------------------------
 # DB setup
@@ -283,7 +285,6 @@ def get_db():
 # -----------------------------------------------------------------------------
 # Utility: slugify
 # -----------------------------------------------------------------------------
-import re
 
 def slugify(value: str) -> str:
     value = re.sub(r"[^a-zA-Z0-9\s-]", "", value).strip().lower()
@@ -758,7 +759,6 @@ layout_html = """
 # -----------------------------------------------------------------------------
 # Helper to materialize templates to disk on startup (dev convenience)
 # -----------------------------------------------------------------------------
-import os
 
 TEMPLATE_DIR = os.path.join(os.getcwd(), "templates")
 os.makedirs(TEMPLATE_DIR, exist_ok=True)
