@@ -37,6 +37,9 @@ from backend.tribal_core import (
     get_db as core_get_db,
     User,
 )
+from backend.native_registry.appy import (
+    register_events as native_registry_register,
+)
 
 # Your ORM User (from your SQLAlchemy models package; if it's the one in tribal_core, import from there)
 # from .models import User  # <- switch duplicate and merge into .tribal_core.py
@@ -99,8 +102,9 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
-# DB/table creation + seeding at startup (from core)
+# DB/table creation + seeding at startup (from core and native registry)
 core_register(app)
+native_registry_register(app)
 
 
 # ---------- Pydantic view models for in-memory demo endpoints ----------
