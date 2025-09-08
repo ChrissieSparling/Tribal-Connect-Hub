@@ -20,18 +20,12 @@ _PASSWORD_RE = re.compile(
     r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$"
 )
 
+
 def validate_password(password: str) -> bool:
-    """Return ``True`` if ``password`` meets basic complexity rules."""
-    # return bool(_PASSWORD_RE.match(password))
-    """Validate password complexity.
-    The default policy requires a minimum length of eight characters and at
-    least one alphabetic character and one digit.
+    """Return ``True`` if ``password`` has at least eight characters and
+    includes upper- and lower-case letters, a digit, and a special character.
     """
-    if len(password) < 8:
-        return False
-    has_alpha = any(ch.isalpha() for ch in password)
-    has_digit = any(ch.isdigit() for ch in password)
-    return has_alpha and has_digit
+    return bool(_PASSWORD_RE.match(password))
 
 def hash_password(password: str, *, salt: bytes | str | None = None) -> str:
     """Return a salted PBKDF2 hash for ``password``.
