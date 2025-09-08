@@ -295,11 +295,27 @@ def slugify(value: str) -> str:
 # -----------------------------------------------------------------------------
 # DB init
 # -----------------------------------------------------------------------------
-@app.on_event("startup")
-def on_startup():
-    Base.metadata.create_all(engine)
-    with SessionLocal() as db:
-        seed_taxonomy(db)
+
+
+def register_events(app: FastAPI) -> None:
+    """Attach startup handlers to the provided ``FastAPI`` app.
+
+    When the native registry router is included in another application, the
+    startup event defined on the standalone ``app`` in this module will not be
+    executed. Exposing this helper lets the main application register the same
+    initialization logic, ensuring the schema and seed data exist before any
+    requests are handled.
+    """
+
+    @app.on_event("startup")
+    def on_startup() -> None:  # pragma: no cover - executed at runtime
+        Base.metadata.create_all(engine)
+        with SessionLocal() as db:
+            seed_taxonomy(db)
+
+
+# When running this module directly, ensure events are registered for ``app``
+register_events(app)
 
 
 # -----------------------------------------------------------------------------
