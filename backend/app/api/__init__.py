@@ -3,7 +3,9 @@ from fastapi import APIRouter
 from backend.tenants.router import router as tenants_router
 from backend.approvals.router import router as approvals_router
 from backend.audit.router import router as audit_router
-from backend.native_registry.router import router as native_registry_router
+from backend.native_registry.router import (
+    router as native_registry_router,
+)
 from backend.tribal_core import router as core_router, health_router
 
 api_router = APIRouter()
