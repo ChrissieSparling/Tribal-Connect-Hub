@@ -522,7 +522,7 @@ async def admin_memberships(request: Request, db: SASession = Depends(core_get_d
         .all()
     )
     return templates.TemplateResponse(
-        "admin_memberships.html", {"request": request, "pending": pending}
+        "admin_membership.html", {"request": request, "pending": pending}
     )
 
 
