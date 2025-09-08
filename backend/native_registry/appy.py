@@ -18,8 +18,6 @@ from typing import Optional, List
 
 from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-from fastapi import Request
 from pydantic import BaseModel, Field
 from sqlalchemy import (
     create_engine, ForeignKey, String, Integer, Text, DateTime, Enum as SAEnum,
@@ -271,7 +269,6 @@ app = FastAPI(title="Native Business Registry & TERO Hub")
 static_path = Path(__file__).resolve().parent.parent / "static"
 if static_path.exists():
     app.mount("/static", StaticFiles(directory=static_path), name="static")
-templates = Jinja2Templates(directory="templates")
 
 
 def get_db():
@@ -398,62 +395,6 @@ def seed_taxonomy(db: Session):
 
 
 # -----------------------------------------------------------------------------
-# ROUTES — Public browsing (server-rendered examples)
-# -----------------------------------------------------------------------------
-@app.get("/")
-def home(request: Request, db: Session = Depends(get_db)):
-    categories = db.query(Category).order_by(Category.name).all()
-    return templates.TemplateResponse("home.html", {"request": request, "categories": categories})
-
-
-@app.get("/c/{category_slug}")
-def view_category(category_slug: str, request: Request, db: Session = Depends(get_db)):
-    cat = db.query(Category).filter_by(slug=category_slug).one_or_none()
-    if not cat:
-        raise HTTPException(404, "Category not found")
-    subcats = db.query(SubCategory).filter_by(category_id=cat.id).order_by(SubCategory.name).all()
-    return templates.TemplateResponse("category.html", {"request": request, "category": cat, "subcategories": subcats})
-
-
-@app.get("/s/{subcategory_slug}")
-def view_subcategory(subcategory_slug: str, request: Request, db: Session = Depends(get_db)):
-    sub = db.query(SubCategory).filter_by(slug=subcategory_slug).one_or_none()
-    if not sub:
-        raise HTTPException(404, "Subcategory not found")
-    # list businesses tagged with this subcategory
-    bs_ids = [bs.business_id for bs in db.query(BusinessSubCategory).filter_by(subcategory_id=sub.id).all()]
-    businesses = []
-    if bs_ids:
-        businesses = (
-            db.query(Business)
-            .filter(Business.id.in_(bs_ids))
-            .order_by(Business.name)
-            .all()
-        )
-    return templates.TemplateResponse("subcategory.html", {"request": request, "subcategory": sub, "businesses": businesses})
-
-
-@app.get("/b/{slug}")
-def view_business(slug: str, request: Request, db: Session = Depends(get_db)):
-    biz = db.query(Business).filter_by(slug=slug).one_or_none()
-    if not biz:
-        raise HTTPException(404, "Business not found")
-    avg = None
-    if biz.reviews:
-        avg = round(sum(r.rating for r in biz.reviews if r.status == ReviewStatus.approved) / max(1, len([r for r in biz.reviews if r.status == ReviewStatus.approved])), 2)
-    return templates.TemplateResponse("business.html", {
-        "request": request,
-        "business": biz,
-        "avg_rating": avg,
-        "reviews": [r for r in biz.reviews if r.status == ReviewStatus.approved],
-        "media": biz.media,
-        "legal_links": biz.links,
-        "compliance": biz.compliance,
-        "size_feedback": biz.size_feedback,
-    })
-
-
-# -----------------------------------------------------------------------------
 # ROUTES — JSON API (for async forms or future React)
 # -----------------------------------------------------------------------------
 @app.post("/api/business", response_model=BusinessOut)
@@ -530,7 +471,7 @@ def list_businesses(
 
 
 @app.post("/api/b/{slug}/reviews")
-def create_review(slug: str, payload: ReviewCreate, request: Request, db: Session = Depends(get_db)):
+def create_review(slug: str, payload: ReviewCreate, db: Session = Depends(get_db)):
     biz = db.query(Business).filter_by(slug=slug).one_or_none()
     if not biz:
         raise HTTPException(404, "Business not found")
@@ -561,234 +502,6 @@ def moderate_review(review_id: int, status: ReviewStatus, db: Session = Depends(
     r.status = status
     db.commit()
     return {"ok": True}
-
-
-# -----------------------------------------------------------------------------
-# Templates (inline examples – move to /templates)
-# -----------------------------------------------------------------------------
-# home.html
-home_html = """
-{% extends 'layout.html' %}
-{% block content %}
-<div class="container py-4">
-  <h1 class="mb-3">Native-Owned Business Registry & TERO Hub</h1>
-  <div class="row">
-    {% for c in categories %}
-      <div class="col-md-6 mb-3">
-        <div class="card h-100">
-          <div class="card-body">
-            <h3 class="card-title"><a href="/c/{{ c.slug }}">{{ c.name }}</a></h3>
-            <p class="card-text">{{ c.description }}</p>
-          </div>
-        </div>
-      </div>
-    {% endfor %}
-  </div>
-</div>
-{% endblock %}
-"""
-
-# category.html
-category_html = """
-{% extends 'layout.html' %}
-{% block content %}
-<div class="container py-4">
-  <h2 class="mb-3">{{ category.name }}</h2>
-  <div class="list-group">
-    {% for s in subcategories %}
-      <a class="list-group-item list-group-item-action" href="/s/{{ s.slug }}">{{ s.name }}</a>
-    {% endfor %}
-  </div>
-</div>
-{% endblock %}
-"""
-
-# subcategory.html
-subcategory_html = """
-{% extends 'layout.html' %}
-{% block content %}
-<div class="container py-4">
-  <h2 class="mb-3">{{ subcategory.name }}</h2>
-  {% if businesses %}
-    <div class="list-group">
-      {% for b in businesses %}
-        <a class="list-group-item list-group-item-action" href="/b/{{ b.slug }}">
-          <div class="d-flex justify-content-between">
-            <h5 class="mb-1">{{ b.name }}</h5>
-            <small>{{ b.city }}{% if b.state %}, {{ b.state }}{% endif %}</small>
-          </div>
-          <p class="mb-1">{{ (b.description or '')[:160] }}{% if (b.description or '')|length > 160 %}…{% endif %}</p>
-        </a>
-      {% endfor %}
-    </div>
-  {% else %}
-    <p>No businesses listed yet.</p>
-  {% endif %}
-</div>
-{% endblock %}
-"""
-
-# business.html
-business_html = """
-{% extends 'layout.html' %}
-{% block content %}
-<div class="container py-4">
-  <div class="row">
-    <div class="col-md-7">
-      <h2 class="mb-2">{{ business.name }}</h2>
-      <p>{{ business.description }}</p>
-
-      <h5 class="mt-4">Compliance & Legal</h5>
-      <ul>
-        {% for c in compliance %}
-          <li><strong>{{ c.key }}:</strong> {{ c.value }}</li>
-        {% endfor %}
-      </ul>
-      <ul>
-        {% for l in legal_links %}
-          <li><a href="{{ l.url }}" target="_blank" rel="noopener">{{ l.label }}</a></li>
-        {% endfor %}
-      </ul>
-
-      <h5 class="mt-4">Community Reviews {% if avg_rating %}<span class="badge bg-success">Avg {{ avg_rating }}</span>{% endif %}</h5>
-      {% if reviews %}
-        {% for r in reviews %}
-          <div class="border rounded p-3 mb-2">
-            <strong>{{ r.title }}</strong> — {{ r.rating }}/5
-            <div class="text-muted small">{{ r.created_at }}</div>
-            <div>{{ r.body }}</div>
-          </div>
-        {% endfor %}
-      {% else %}
-        <p>No reviews yet.</p>
-      {% endif %}
-
-      <form class="mt-3" id="review-form">
-        <h6>Add a Review</h6>
-        <input class="form-control mb-2" name="title" placeholder="Title" required>
-        <textarea class="form-control mb-2" name="body" placeholder="Your experience" required></textarea>
-        <input class="form-control mb-2" name="rating" type="number" min="1" max="5" value="5" required>
-        <button class="btn btn-primary">Submit</button>
-      </form>
-
-      <h5 class="mt-4">Clothing Fit & Cultural Notes</h5>
-      {% if size_feedback %}
-        {% for s in size_feedback %}
-          <div class="border rounded p-3 mb-2">
-            <div class="small text-muted">{{ s.created_at }}</div>
-            <div><strong>{{ s.product_name or 'Product' }}</strong> — Fit scale: {{ s.fit_scale }} (-2 small … +2 large)</div>
-            {% if s.usual_size or s.purchased_size %}
-              <div>Usual size: {{ s.usual_size }} | Purchased: {{ s.purchased_size }}</div>
-            {% endif %}
-            {% if s.fit_notes %}<div>{{ s.fit_notes }}</div>{% endif %}
-            {% if s.culture_notes %}<div class="mt-1"><em>Cultural:</em> {{ s.culture_notes }}</div>{% endif %}
-          </div>
-        {% endfor %}
-      {% else %}
-        <p>No size feedback yet.</p>
-      {% endif %}
-
-      <form class="mt-2" id="size-form">
-        <input class="form-control mb-2" name="product_name" placeholder="Product name (optional)">
-        <div class="row g-2">
-          <div class="col"><input class="form-control" name="usual_size" placeholder="Your usual size"></div>
-          <div class="col"><input class="form-control" name="purchased_size" placeholder="Purchased size"></div>
-        </div>
-        <textarea class="form-control my-2" name="fit_notes" placeholder="Fit notes (e.g., chest tight, sleeves long)"></textarea>
-        <label class="form-label">Fit scale (-2 small … +2 large)</label>
-        <input class="form-range" name="fit_scale" type="range" min="-2" max="2" value="0">
-        <textarea class="form-control my-2" name="culture_notes" placeholder="Cultural significance (story, pattern, practice)"></textarea>
-        <button class="btn btn-outline-primary">Submit</button>
-      </form>
-    </div>
-    <div class="col-md-5">
-      <div id="gallery" class="mb-3">
-        {% if media %}
-          {% for m in media %}
-            <img class="img-fluid mb-2 rounded" src="{{ m.url }}" alt="{{ m.caption }}">
-          {% endfor %}
-        {% else %}
-          <div class="alert alert-info">No photos yet.</div>
-        {% endif %}
-      </div>
-      <div class="card">
-        <div class="card-body">
-          <h6>Contact</h6>
-          {% if business.website %}<div><a href="{{ business.website }}" target="_blank">Website</a></div>{% endif %}
-          {% if business.email %}<div>Email: {{ business.email }}</div>{% endif %}
-          {% if business.phone %}<div>Phone: {{ business.phone }}</div>{% endif %}
-          <div class="small text-muted mt-2">{{ business.street }} {{ business.city }} {{ business.state }} {{ business.postal_code }}</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-<script>
-  const postJSON = async (url, data) => {
-    const r = await fetch(url, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)});
-    return await r.json();
-  }
-  document.getElementById('review-form')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const data = Object.fromEntries(new FormData(e.target));
-    data.rating = parseInt(data.rating, 10);
-    const res = await postJSON('/api/b/{{ business.slug }}/reviews', data);
-    alert('Review submitted for moderation.');
-    location.reload();
-  });
-  document.getElementById('size-form')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const data = Object.fromEntries(new FormData(e.target));
-    data.fit_scale = parseInt(data.fit_scale, 10);
-    const res = await postJSON('/api/b/{{ business.slug }}/size-feedback', data);
-    alert('Thanks for your fit & cultural notes!');
-    location.reload();
-  });
-</script>
-{% endblock %}
-"""
-
-# layout.html
-layout_html = """
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Native Registry</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-<nav class="navbar navbar-expand-lg bg-body-tertiary">
-  <div class="container">
-    <a class="navbar-brand" href="/">Native Registry</a>
-  </div>
-</nav>
-<main>
-  {% block content %}{% endblock %}
-</main>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
-"""
-
-# -----------------------------------------------------------------------------
-# Helper to materialize templates to disk on startup (dev convenience)
-# -----------------------------------------------------------------------------
-
-TEMPLATE_DIR = os.path.join(os.getcwd(), "templates")
-os.makedirs(TEMPLATE_DIR, exist_ok=True)
-
-with open(os.path.join(TEMPLATE_DIR, "layout.html"), "w", encoding="utf-8") as f:
-    f.write(layout_html)
-with open(os.path.join(TEMPLATE_DIR, "home.html"), "w", encoding="utf-8") as f:
-    f.write(home_html)
-with open(os.path.join(TEMPLATE_DIR, "category.html"), "w", encoding="utf-8") as f:
-    f.write(category_html)
-with open(os.path.join(TEMPLATE_DIR, "subcategory.html"), "w", encoding="utf-8") as f:
-    f.write(subcategory_html)
-with open(os.path.join(TEMPLATE_DIR, "business.html"), "w", encoding="utf-8") as f:
-    f.write(business_html)
 
 
 # -----------------------------------------------------------------------------

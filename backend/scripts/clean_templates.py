@@ -4,7 +4,7 @@ TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "templates"
 DIRECTIVE = ""  # don't inject a Jinja comment at the top
 EXTENDS_PREFIX = "{% extends"
 EXTENDS_PREFIX_TRIMMED = "{%- extends"
-LAYOUT_NAMES = {"layout.html"}
+LAYOUT_NAMES: set[str] = set()
 
 def clean_file(p: Path) -> bool:
     raw = p.read_bytes()
