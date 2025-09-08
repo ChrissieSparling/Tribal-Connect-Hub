@@ -319,7 +319,7 @@ def get_tribe_members(tribe_id: int):
 # ---------- Routes (HTML / Templates) ----------
 @app.get("/", response_class=HTMLResponse)
 async def home_page(request: Request):
-    return templates.TemplateResponse("home.html", {"request": request})
+    return templates.TemplateResponse("welcome.html", {"request": request})
 
 
 @app.get("/tribes-html", response_class=HTMLResponse)
